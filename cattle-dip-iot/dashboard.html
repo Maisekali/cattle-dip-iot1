@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AcaraSense Pro — Live Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080c0f;
+  --s1:#0e1419;
+  --s2:#141c24;
+  --s3:#1a2332;
+  --g:#2dff8c;
+  --gb:rgba(45,255,140,.12);
+  --gd:rgba(45,255,140,.06);
+  --t:#00d4ff;
+  --w:#ffb020;
+  --r:#ff4d4d;
+  --txt:#c8dce8;
+  --mut:#4a6b7a;
+  --mono:'IBM Plex Mono',monospace;
+  --sans:'Syne',sans-serif;
+}
+body{background:var(--bg);color:var(--txt);font-family:var(--sans);min-height:100vh;overflow-x:hidden}
+
+/* scan-line overlay */
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px);pointer-events:none;z-index:999}
+
+/* HEADER */
+header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:.85rem 2rem;
+  border-bottom:1px solid rgba(45,255,140,.15);
+  background:var(--s1);
+  position:sticky;top:0;z-index:100;
+}
+.logo-wrap{display:flex;align-items:center;gap:14px}
+.logo-mark{
+  width:40px;height:40px;border:1.5px solid var(--g);
+  border-radius:8px;display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:13px;font-weight:600;color:var(--g);
+  position:relative;
+}
+.logo-mark::after{content:'';position:absolute;inset:3px;border:1px solid rgba(45,255,140,.2);border-radius:5px}
+h1{font-size:1.05rem;font-weight:800;letter-spacing:-.02em;color:#fff}
+h1 span{color:var(--g)}
+.logo-sub{font-size:.68rem;color:var(--mut);font-family:var(--mono);letter-spacing:.06em;margin-top:1px}
+
+.header-right{display:flex;align-items:center;gap:16px}
+.ws-badge{
+  display:flex;align-items:center;gap:7px;
+  font-size:.7rem;font-family:var(--mono);
+  padding:5px 12px;border-radius:20px;
+  border:1px solid;transition:all .3s;
+}
+.ws-badge.connected{border-color:rgba(45,255,140,.3);background:rgba(45,255,140,.08);color:var(--g)}
+.ws-badge.disconnected{border-color:rgba(255,77,77,.3);background:rgba(255,77,77,.08);color:var(--r)}
+.ws-badge.connecting{border-color:rgba(255,176,32,.3);background:rgba(255,176,32,.08);color:var(--w)}
+.led{width:7px;height:7px;border-radius:50%;animation:blink 1.5s infinite}
+.ws-badge.connected .led{background:var(--g)}
+.ws-badge.disconnected .led{background:var(--r);animation:none}
+.ws-badge.connecting .led{background:var(--w)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+#clock{font-size:.72rem;font-family:var(--mono);color:var(--mut)}
+#last-rx{font-size:.65rem;font-family:var(--mono);color:var(--mut)}
+
+/* ALERT BANNER */
+#alert-banner{
+  display:none;
+  padding:.75rem 2rem;
+  font-size:.8rem;font-family:var(--mono);
+  border-bottom:1px solid;
+  animation:slideIn .3s ease;
+}
+#alert-banner.WARNING{background:rgba(255,176,32,.1);border-color:rgba(255,176,32,.3);color:var(--w)}
+#alert-banner.CRITICAL{background:rgba(255,77,77,.12);border-color:rgba(255,77,77,.35);color:var(--r)}
+@keyframes slideIn{from{transform:translateY(-100%);opacity:0}to{transform:translateY(0);opacity:1}}
+
+/* MAIN LAYOUT */
+.content{padding:1.5rem 2rem;max-width:1400px;margin:auto}
+
+/* WAITING STATE */
+#waiting{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:60vh;gap:20px;text-align:center;
+}
+.wait-ring{
+  width:80px;height:80px;border-radius:50%;
+  border:2px solid rgba(45,255,140,.15);
+  border-top-color:var(--g);
+  animation:spin 1.2s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.wait-title{font-size:1.1rem;font-weight:600;color:#fff}
+.wait-sub{font-size:.8rem;font-family:var(--mono);color:var(--mut);line-height:1.7}
+
+/* DASHBOARD GRID */
+#dashboard{display:none}
+
+/* METRICS */
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.metric{
+  background:var(--s1);
+  border:1px solid rgba(45,255,140,.12);
+  border-radius:14px;padding:1.25rem 1.4rem;
+  position:relative;overflow:hidden;
+  transition:border-color .3s;
+}
+.metric.flash{animation:flash .5s ease}
+@keyframes flash{0%{background:rgba(45,255,140,.15)}100%{background:var(--s1)}}
+.metric-label{font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;color:var(--mut);font-family:var(--mono);margin-bottom:10px}
+.metric-val{font-size:2.4rem;font-weight:800;line-height:1;letter-spacing:-.04em;color:#fff;transition:color .3s}
+.metric-unit{font-size:1.1rem;font-weight:400;color:var(--mut)}
+.metric-status{font-size:.68rem;font-family:var(--mono);margin-top:8px}
+.metric-bar{height:3px;background:rgba(255,255,255,.07);border-radius:2px;margin-top:12px;overflow:hidden}
+.metric-bar-fill{height:100%;border-radius:2px;transition:width .8s ease}
+
+.metric.ok .metric-bar-fill{background:var(--g)}
+.metric.warn .metric-bar-fill{background:var(--w)}
+.metric.crit .metric-bar-fill{background:var(--r)}
+.metric.ok .metric-val{color:var(--g)}
+.metric.warn .metric-val{color:var(--w)}
+.metric.crit .metric-val{color:var(--r)}
+.metric.info .metric-val{color:var(--t)}
+.metric.info .metric-bar-fill{background:var(--t)}
+
+.metric-corner{
+  position:absolute;top:12px;right:14px;
+  font-size:.6rem;font-family:var(--mono);
+  padding:2px 7px;border-radius:10px;
+}
+.metric.ok .metric-corner{background:rgba(45,255,140,.12);color:var(--g)}
+.metric.warn .metric-corner{background:rgba(255,176,32,.12);color:var(--w)}
+.metric.crit .metric-corner{background:rgba(255,77,77,.12);color:var(--r)}
+.metric.info .metric-corner{background:rgba(0,212,255,.1);color:var(--t)}
+
+/* CHARTS */
+.charts-row{display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-bottom:16px}
+.chart-card{
+  background:var(--s1);border:1px solid rgba(45,255,140,.12);
+  border-radius:14px;padding:1.25rem 1.4rem;
+}
+.card-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px}
+.card-title{font-size:.85rem;font-weight:600;color:#fff}
+.card-sub{font-size:.65rem;font-family:var(--mono);color:var(--mut);margin-bottom:1rem}
+.pts-badge{font-size:.62rem;font-family:var(--mono);color:var(--mut);padding:2px 8px;border:1px solid rgba(45,255,140,.15);border-radius:10px}
+
+/* GAUGE */
+.gauge-wrap{display:flex;flex-direction:column;align-items:center;padding:.5rem 0 0}
+.gauge-svg{width:180px;height:100px;overflow:visible}
+.gauge-val{font-size:2rem;font-weight:800;text-anchor:middle;font-family:'Syne',sans-serif}
+.gauge-label{font-size:.6rem;text-anchor:middle;font-family:'IBM Plex Mono',monospace}
+
+/* BOTTOM ROW */
+.bottom-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* LOG TABLE */
+.log-card{background:var(--s1);border:1px solid rgba(45,255,140,.12);border-radius:14px;overflow:hidden}
+.log-head{padding:1rem 1.4rem .75rem;border-bottom:1px solid rgba(45,255,140,.08);display:flex;justify-content:space-between;align-items:center}
+.log-head-title{font-size:.85rem;font-weight:600;color:#fff}
+.log-count{font-size:.65rem;font-family:var(--mono);color:var(--mut)}
+#log-body{max-height:240px;overflow-y:auto}
+#log-body::-webkit-scrollbar{width:4px}
+#log-body::-webkit-scrollbar-track{background:transparent}
+#log-body::-webkit-scrollbar-thumb{background:rgba(45,255,140,.2);border-radius:2px}
+.log-row{
+  display:grid;grid-template-columns:90px 70px 70px 70px 1fr;
+  padding:7px 1.4rem;border-bottom:1px solid rgba(45,255,140,.04);
+  font-size:.7rem;font-family:var(--mono);
+  transition:background .2s;
+}
+.log-row:hover{background:rgba(45,255,140,.03)}
+.log-row:last-child{border-bottom:none}
+.log-row.new{background:rgba(45,255,140,.07);animation:rowIn .4s ease}
+@keyframes rowIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
+.log-head-row{color:var(--mut);font-size:.62rem;text-transform:uppercase;letter-spacing:.07em;padding:.6rem 1.4rem;background:var(--s2);border-bottom:1px solid rgba(45,255,140,.08)}
+
+/* STATUS CARD */
+.status-card{background:var(--s1);border:1px solid rgba(45,255,140,.12);border-radius:14px;padding:1.25rem 1.4rem}
+.status-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(45,255,140,.06)}
+.status-row:last-child{border-bottom:none}
+.sr-left{display:flex;align-items:center;gap:10px}
+.sr-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;background:var(--s2)}
+.sr-name{font-size:.8rem;font-weight:600;color:#fff}
+.sr-desc{font-size:.65rem;font-family:var(--mono);color:var(--mut);margin-top:1px}
+.sr-badge{font-size:.62rem;font-family:var(--mono);padding:3px 9px;border-radius:10px}
+.sr-ok{background:rgba(45,255,140,.12);color:var(--g);border:1px solid rgba(45,255,140,.2)}
+.sr-warn{background:rgba(255,176,32,.1);color:var(--w);border:1px solid rgba(255,176,32,.2)}
+.sr-off{background:rgba(255,77,77,.1);color:var(--r);border:1px solid rgba(255,77,77,.2)}
+
+@media(max-width:1100px){
+  .metrics{grid-template-columns:repeat(2,1fr)}
+  .charts-row,.bottom-row{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-wrap">
+    <div class="logo-mark">AC</div>
+    <div>
+      <h1>Acara<span>Sense</span> Pro</h1>
+      <div class="logo-sub">INTELLIGENT CATTLE DIP · LIVE MONITOR</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div id="last-rx">Waiting for hardware...</div>
+    <div id="ws-badge" class="ws-badge connecting"><div class="led"></div><span id="ws-label">CONNECTING</span></div>
+    <div id="clock"></div>
+  </div>
+</header>
+
+<div id="alert-banner"></div>
+
+<div class="content">
+
+  <!-- WAITING FOR HARDWARE -->
+  <div id="waiting">
+    <div class="wait-ring"></div>
+    <div class="wait-title">Waiting for hardware data...</div>
+    <div class="wait-sub">
+      Make sure your ESP8266 is powered on and connected to WiFi.<br>
+      It should POST to <strong style="color:var(--g)" id="post-url">http://&lt;YOUR_PC_IP&gt;:3000/data</strong><br><br>
+      Expected JSON format from ESP8266:<br>
+      <span style="color:var(--g)">{"temp":24.5, "level":72.3, "conc":1.45, "animals":12}</span>
+    </div>
+  </div>
+
+  <!-- LIVE DASHBOARD (shown when data arrives) -->
+  <div id="dashboard">
+    <div class="metrics">
+      <div class="metric ok" id="m-temp">
+        <div class="metric-label">Temperature · DS18B20</div>
+        <div class="metric-corner" id="temp-status">NORMAL</div>
+        <div class="metric-val"><span id="val-temp">--.-</span><span class="metric-unit"> °C</span></div>
+        <div class="metric-status" id="status-temp" style="color:var(--g)">Optimal range: 20–30°C</div>
+        <div class="metric-bar"><div class="metric-bar-fill" id="bar-temp" style="width:0%"></div></div>
+      </div>
+
+      <div class="metric ok" id="m-level">
+        <div class="metric-label">Tank Level · HC-SR04</div>
+        <div class="metric-corner" id="level-status">OK</div>
+        <div class="metric-val"><span id="val-level">--.-</span><span class="metric-unit"> %</span></div>
+        <div class="metric-status" id="status-level" style="color:var(--g)">Refill below 25%</div>
+        <div class="metric-bar"><div class="metric-bar-fill" id="bar-level" style="width:0%"></div></div>
+      </div>
+
+      <div class="metric info" id="m-conc">
+        <div class="metric-label">Acaricide Conc. · Chem Sensor</div>
+        <div class="metric-corner" id="conc-status">OPTIMAL</div>
+        <div class="metric-val"><span id="val-conc">-.-</span><span class="metric-unit"> %</span></div>
+        <div class="metric-status" id="status-conc" style="color:var(--t)">Target: 1.0–2.0%</div>
+        <div class="metric-bar"><div class="metric-bar-fill" id="bar-conc" style="width:0%"></div></div>
+      </div>
+
+      <div class="metric info" id="m-animals">
+        <div class="metric-label">Animals Dipped · Session</div>
+        <div class="metric-corner" id="animals-status">ACTIVE</div>
+        <div class="metric-val"><span id="val-animals">0</span><span class="metric-unit"> hd</span></div>
+        <div class="metric-status" style="color:var(--t)">Today's dipping count</div>
+        <div class="metric-bar"><div class="metric-bar-fill" id="bar-animals" style="width:0%;background:var(--t)"></div></div>
+      </div>
+    </div>
+
+    <div class="charts-row">
+      <div class="chart-card">
+        <div class="card-head">
+          <div>
+            <div class="card-title">Real-time Sensor Trends</div>
+            <div class="card-sub">Temperature (°C) · Acaricide Concentration (%) · Live from hardware</div>
+          </div>
+          <div class="pts-badge" id="pts-badge">0 pts</div>
+        </div>
+        <div style="position:relative;height:220px"><canvas id="trendChart"></canvas></div>
+      </div>
+
+      <div class="chart-card">
+        <div class="card-title">Tank Level</div>
+        <div class="card-sub">HC-SR04 ultrasonic — live %</div>
+        <div class="gauge-wrap">
+          <svg class="gauge-svg" viewBox="0 0 200 110">
+            <defs>
+              <linearGradient id="gOk" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" style="stop-color:#2dff8c"/>
+                <stop offset="100%" style="stop-color:#00d4ff"/>
+              </linearGradient>
+              <linearGradient id="gWarn" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" style="stop-color:#ffb020"/>
+                <stop offset="100%" style="stop-color:#ff7a00"/>
+              </linearGradient>
+              <linearGradient id="gCrit" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" style="stop-color:#ff4d4d"/>
+                <stop offset="100%" style="stop-color:#ff0055"/>
+              </linearGradient>
+            </defs>
+            <!-- background arc -->
+            <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="12" stroke-linecap="round"/>
+            <!-- value arc -->
+            <path id="gauge-arc" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gOk)" stroke-width="12" stroke-linecap="round" stroke-dasharray="251.2" stroke-dashoffset="251.2" style="transition:stroke-dashoffset 1s ease,stroke .5s"/>
+            <!-- needle -->
+            <line id="gauge-needle" x1="100" y1="100" x2="100" y2="28" stroke="rgba(255,255,255,.3)" stroke-width="2" stroke-linecap="round" style="transform-origin:100px 100px;transition:transform 1s ease"/>
+            <circle cx="100" cy="100" r="6" fill="var(--s1)" stroke="rgba(255,255,255,.3)" stroke-width="1.5"/>
+            <!-- labels -->
+            <text x="16" y="116" fill="#4a6b7a" font-size="9" font-family="IBM Plex Mono">0%</text>
+            <text x="172" y="116" fill="#4a6b7a" font-size="9" font-family="IBM Plex Mono">100%</text>
+            <!-- value -->
+            <text id="gauge-text" class="gauge-val" x="100" y="86" fill="#2dff8c" font-size="28" font-family="Syne" font-weight="800">--%</text>
+            <text class="gauge-label" x="100" y="100" fill="#4a6b7a" font-size="8" font-family="IBM Plex Mono">TANK LEVEL</text>
+          </svg>
+          <div style="font-size:.68rem;font-family:var(--mono);color:var(--mut);text-align:center" id="gauge-sub">Waiting for data...</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bottom-row">
+      <!-- READING LOG -->
+      <div class="log-card">
+        <div class="log-head">
+          <div class="log-head-title">Reading Log</div>
+          <div class="log-count" id="log-count">0 readings</div>
+        </div>
+        <div class="log-head-row" style="display:grid;grid-template-columns:90px 70px 70px 70px 1fr">
+          <span>Time</span><span>Temp</span><span>Level</span><span>Conc</span><span>Status</span>
+        </div>
+        <div id="log-body">
+          <div style="padding:2rem;text-align:center;font-size:.75rem;color:var(--mut);font-family:var(--mono)">No readings yet</div>
+        </div>
+      </div>
+
+      <!-- DEVICE STATUS -->
+      <div class="status-card">
+        <div class="card-title" style="margin-bottom:1rem">Device Status</div>
+        <div class="status-row">
+          <div class="sr-left">
+            <div class="sr-icon">🔧</div>
+            <div><div class="sr-name">Arduino MEGA 2560</div><div class="sr-desc">Main controller · Sensor hub</div></div>
+          </div>
+          <span class="sr-badge" id="badge-mega">WAITING</span>
+        </div>
+        <div class="status-row">
+          <div class="sr-left">
+            <div class="sr-icon">📡</div>
+            <div><div class="sr-name">ESP8266 NodeMCU</div><div class="sr-desc">WiFi gateway · HTTP POST</div></div>
+          </div>
+          <span class="sr-badge" id="badge-esp">WAITING</span>
+        </div>
+        <div class="status-row">
+          <div class="sr-left">
+            <div class="sr-icon">🌡️</div>
+            <div><div class="sr-name">DS18B20</div><div class="sr-desc">Temperature · Pin D2</div></div>
+          </div>
+          <span class="sr-badge" id="badge-temp">WAITING</span>
+        </div>
+        <div class="status-row">
+          <div class="sr-left">
+            <div class="sr-icon">📏</div>
+            <div><div class="sr-name">HC-SR04</div><div class="sr-desc">Ultrasonic level · Trig D7 Echo D8</div></div>
+          </div>
+          <span class="sr-badge" id="badge-hcsr">WAITING</span>
+        </div>
+        <div class="status-row">
+          <div class="sr-left">
+            <div class="sr-icon">🧪</div>
+            <div><div class="sr-name">Chemical Sensor</div><div class="sr-desc">Concentration · Pin A0</div></div>
+          </div>
+          <span class="sr-badge" id="badge-chem">WAITING</span>
+        </div>
+        <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid rgba(45,255,140,.08);font-size:.68rem;font-family:var(--mono);color:var(--mut)">
+          <div>Readings received: <span id="stat-count" style="color:var(--g)">0</span></div>
+          <div>Server: <span style="color:var(--g)">ws://localhost:3000</span></div>
+          <div>ESP8266 → POST: <span id="stat-url" style="color:var(--t)">http://&lt;PC_IP&gt;:3000/data</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── CLOCK ───────────────────────────────────────────────────
+function tick(){document.getElementById('clock').textContent=new Date().toLocaleTimeString('en-KE',{hour12:false})}
+setInterval(tick,1000);tick();
+
+// ─── CHART SETUP ─────────────────────────────────────────────
+const MAX_POINTS = 50;
+const labels=[], tempArr=[], concArr=[];
+
+const trendCtx = document.getElementById('trendChart').getContext('2d');
+const trendChart = new Chart(trendCtx,{
+  type:'line',
+  data:{
+    labels,
+    datasets:[
+      {label:'Temp °C',data:tempArr,borderColor:'#2dff8c',backgroundColor:'rgba(45,255,140,.06)',
+       tension:.4,pointRadius:0,borderWidth:2,yAxisID:'yT'},
+      {label:'Conc %',data:concArr,borderColor:'#00d4ff',backgroundColor:'rgba(0,212,255,.05)',
+       tension:.4,pointRadius:0,borderWidth:2,yAxisID:'yC'}
+    ]
+  },
+  options:{
+    responsive:true,maintainAspectRatio:false,
+    animation:{duration:300},
+    plugins:{legend:{display:false}},
+    scales:{
+      x:{ticks:{color:'#4a6b7a',font:{size:10,family:'IBM Plex Mono'},maxTicksLimit:8},
+         grid:{color:'rgba(45,255,140,.05)'}},
+      yT:{position:'left',ticks:{color:'#2dff8c',font:{size:10,family:'IBM Plex Mono'}},
+          grid:{color:'rgba(45,255,140,.05)'},title:{display:true,text:'°C',color:'#2dff8c',font:{size:10}}},
+      yC:{position:'right',ticks:{color:'#00d4ff',font:{size:10,family:'IBM Plex Mono'}},
+          grid:{display:false},title:{display:true,text:'%',color:'#00d4ff',font:{size:10}}}
+    }
+  }
+});
+
+// ─── GAUGE ────────────────────────────────────────────────────
+const ARC_LEN = 251.2;
+function setGauge(pct){
+  const p = Math.min(100,Math.max(0,pct));
+  const offset = ARC_LEN - (ARC_LEN * p / 100);
+  const arc = document.getElementById('gauge-arc');
+  arc.style.strokeDashoffset = offset;
+  // color
+  if(p<=15)       arc.style.stroke='url(#gCrit)';
+  else if(p<=25)  arc.style.stroke='url(#gWarn)';
+  else            arc.style.stroke='url(#gOk)';
+  // needle
+  const deg = -90 + (p/100)*180;
+  document.getElementById('gauge-needle').style.transform=`rotate(${deg}deg)`;
+  const gText = document.getElementById('gauge-text');
+  gText.textContent = p.toFixed(1)+'%';
+  gText.setAttribute('fill', p<=15?'#ff4d4d':p<=25?'#ffb020':'#2dff8c');
+  const sub = p<=15?'⚠ CRITICAL — Refill immediately!':p<=25?'LOW — Schedule refill':'Normal level';
+  document.getElementById('gauge-sub').textContent=sub;
+  document.getElementById('gauge-sub').style.color=p<=15?'#ff4d4d':p<=25?'#ffb020':'#4a6b7a';
+}
+
+// ─── METRIC UPDATER ──────────────────────────────────────────
+let readingCount = 0;
+let logRows = 0;
+
+function updateMetric(id,valId,barId,statusId,cornerId,val,unit,pct,state,statusTxt,cornerTxt){
+  const card=document.getElementById(id);
+  card.className='metric '+state+' flash';
+  setTimeout(()=>card.classList.remove('flash'),500);
+  document.getElementById(valId).textContent=val;
+  document.getElementById(barId).style.width=Math.min(100,pct)+'%';
+  document.getElementById(statusId).textContent=statusTxt;
+  document.getElementById(statusId).style.color=state==='ok'?'var(--g)':state==='warn'?'var(--w)':state==='crit'?'var(--r)':'var(--t)';
+  document.getElementById(cornerId).textContent=cornerTxt;
+}
+
+function applyReading(r){
+  const {temp,level,conc,animals,ts} = r;
+  readingCount++;
+
+  // ── Temperature
+  const tPct = ((temp-10)/30)*100;
+  const tState = temp>30?'warn':temp<10?'warn':'ok';
+  updateMetric('m-temp','val-temp','bar-temp','status-temp','temp-status',
+    temp.toFixed(1),'°C',tPct,tState,
+    temp>30?'⚠ Above safe limit':'✓ Within range',
+    temp>30?'HIGH':'NORMAL');
+
+  // ── Level
+  const lState = level<=15?'crit':level<=25?'warn':'ok';
+  updateMetric('m-level','val-level','bar-level','status-level','level-status',
+    level.toFixed(1),'%',level,lState,
+    level<=15?'⚠ CRITICAL — Refill now!':level<=25?'⚠ LOW — Refill soon':'✓ Adequate level',
+    level<=15?'CRITICAL':level<=25?'LOW':'OK');
+
+  // ── Concentration
+  const cPct = (conc/3)*100;
+  const cState = (conc<1.0||conc>2.0)?'warn':'info';
+  updateMetric('m-conc','val-conc','bar-conc','status-conc','conc-status',
+    conc.toFixed(2),'%',cPct,cState,
+    (conc<1.0||conc>2.0)?'⚠ Out of target range':'✓ Optimal concentration',
+    (conc<1.0||conc>2.0)?'ADJUST':'OPTIMAL');
+
+  // ── Animals
+  const aPct = Math.min(100,(animals/100)*100);
+  updateMetric('m-animals','val-animals','bar-animals','status-animals','animals-status',
+    animals,'hd',aPct,'info','Today\'s session count','ACTIVE');
+
+  // ── Gauge
+  setGauge(level);
+
+  // ── Chart
+  const t = new Date(ts).toLocaleTimeString('en-KE',{hour12:false,second:'2-digit'});
+  labels.push(t); tempArr.push(temp); concArr.push(conc);
+  if(labels.length>MAX_POINTS){ labels.shift(); tempArr.shift(); concArr.shift(); }
+  trendChart.update('none');
+  document.getElementById('pts-badge').textContent=labels.length+' pts';
+
+  // ── Log
+  const lb=document.getElementById('log-body');
+  if(logRows===0) lb.innerHTML='';
+  logRows++;
+  const statusStr = level<=15?'<span style="color:var(--r)">CRITICAL</span>':
+                    level<=25?'<span style="color:var(--w)">LOW</span>':
+                    '<span style="color:var(--g)">OK</span>';
+  const row=document.createElement('div');
+  row.className='log-row new';
+  row.innerHTML=`<span>${t}</span><span style="color:var(--g)">${temp.toFixed(1)}°C</span><span style="${level<=25?'color:var(--r)':''}">${level.toFixed(1)}%</span><span style="color:var(--t)">${conc.toFixed(2)}%</span><span>${statusStr}</span>`;
+  lb.insertBefore(row,lb.firstChild);
+  // keep max 100 rows
+  while(lb.children.length>100) lb.removeChild(lb.lastChild);
+  document.getElementById('log-count').textContent=logRows+' readings';
+  document.getElementById('stat-count').textContent=readingCount;
+
+  // ── Device badges (all online once data arrives)
+  ['mega','esp','temp','hcsr','chem'].forEach(id=>{
+    const el=document.getElementById('badge-'+id);
+    el.textContent='ONLINE'; el.className='sr-badge sr-ok';
+  });
+  // Flag sensors with issues
+  if(temp===-999){
+    document.getElementById('badge-temp').textContent='ERROR';
+    document.getElementById('badge-temp').className='sr-badge sr-off';
+  }
+  if(level<=15) document.getElementById('badge-hcsr').className='sr-badge sr-warn';
+  if(conc<1.0||conc>2.0) document.getElementById('badge-chem').className='sr-badge sr-warn';
+
+  // ── Last received
+  document.getElementById('last-rx').textContent='Last rx: '+t;
+}
+
+// ─── ALERT BANNER ────────────────────────────────────────────
+function showAlert(alert){
+  if(!alert) { document.getElementById('alert-banner').style.display='none'; return; }
+  const b=document.getElementById('alert-banner');
+  b.style.display='block';
+  b.className=alert.type;
+  b.textContent=(alert.type==='CRITICAL'?'🔴':'🟡')+' '+alert.message;
+}
+
+// ─── WEBSOCKET ───────────────────────────────────────────────
+let ws, reconnectTimer;
+
+function setWsState(state, label){
+  const badge=document.getElementById('ws-badge');
+  badge.className='ws-badge '+state;
+  document.getElementById('ws-label').textContent=label;
+}
+
+function connect(){
+  setWsState('connecting','CONNECTING');
+  try { ws = new WebSocket('ws://'+location.host); }
+  catch(e){ retry(); return; }
+
+  ws.onopen = ()=>{ setWsState('connected','LIVE'); };
+
+  ws.onmessage = (e)=>{
+    const msg = JSON.parse(e.data);
+    if(msg.type==='update'){
+      // Show dashboard, hide waiting
+      document.getElementById('waiting').style.display='none';
+      document.getElementById('dashboard').style.display='block';
+      applyReading(msg.reading);
+      showAlert(msg.alert);
+    }
+  };
+
+  ws.onclose = ()=>{ setWsState('disconnected','OFFLINE'); retry(); };
+  ws.onerror = ()=>{ setWsState('disconnected','ERROR'); };
+}
+
+function retry(){
+  clearTimeout(reconnectTimer);
+  reconnectTimer=setTimeout(connect,3000);
+}
+
+connect();
+</script>
+</body>
+</html>
