@@ -1,579 +1,860 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AcaraSense Pro — Live Dashboard</title>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
-<style>
-*{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#080c0f;
-  --s1:#0e1419;
-  --s2:#141c24;
-  --s3:#1a2332;
-  --g:#2dff8c;
-  --gb:rgba(45,255,140,.12);
-  --gd:rgba(45,255,140,.06);
-  --t:#00d4ff;
-  --w:#ffb020;
-  --r:#ff4d4d;
-  --txt:#c8dce8;
-  --mut:#4a6b7a;
-  --mono:'IBM Plex Mono',monospace;
-  --sans:'Syne',sans-serif;
-}
-body{background:var(--bg);color:var(--txt);font-family:var(--sans);min-height:100vh;overflow-x:hidden}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Cattle Dip • Acaricide IoT PWA</title>
+    
+    <!-- PWA Manifest (embedded via JS) -->
+    <link rel="manifest" id="manifest-link" />
+    <meta name="theme-color" content="#0f172a" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Cattle Dip" />
+    
+    <!-- Fonts & Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Chart.js + Annotation -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.2.1/dist/chartjs-plugin-annotation.min.js"></script>
+    
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+            --success: #22c55e;
+            --danger: #ef4444;
+            --info: #3b82f6;
+            --warning: #f59e0b;
+            --accent: #8b5cf6;
+            --border-light: #334155;
+        }
 
-/* scan-line overlay */
-body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px);pointer-events:none;z-index:999}
+        body.light {
+            --bg: #f1f5f9;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-dim: #475569;
+            --border-light: #cbd5e1;
+        }
 
-/* HEADER */
-header{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:.85rem 2rem;
-  border-bottom:1px solid rgba(45,255,140,.15);
-  background:var(--s1);
-  position:sticky;top:0;z-index:100;
-}
-.logo-wrap{display:flex;align-items:center;gap:14px}
-.logo-mark{
-  width:40px;height:40px;border:1.5px solid var(--g);
-  border-radius:8px;display:flex;align-items:center;justify-content:center;
-  font-family:var(--mono);font-size:13px;font-weight:600;color:var(--g);
-  position:relative;
-}
-.logo-mark::after{content:'';position:absolute;inset:3px;border:1px solid rgba(45,255,140,.2);border-radius:5px}
-h1{font-size:1.05rem;font-weight:800;letter-spacing:-.02em;color:#fff}
-h1 span{color:var(--g)}
-.logo-sub{font-size:.68rem;color:var(--mut);font-family:var(--mono);letter-spacing:.06em;margin-top:1px}
+        * { transition: background-color 0.2s ease, color 0.1s; }
 
-.header-right{display:flex;align-items:center;gap:16px}
-.ws-badge{
-  display:flex;align-items:center;gap:7px;
-  font-size:.7rem;font-family:var(--mono);
-  padding:5px 12px;border-radius:20px;
-  border:1px solid;transition:all .3s;
-}
-.ws-badge.connected{border-color:rgba(45,255,140,.3);background:rgba(45,255,140,.08);color:var(--g)}
-.ws-badge.disconnected{border-color:rgba(255,77,77,.3);background:rgba(255,77,77,.08);color:var(--r)}
-.ws-badge.connecting{border-color:rgba(255,176,32,.3);background:rgba(255,176,32,.08);color:var(--w)}
-.led{width:7px;height:7px;border-radius:50%;animation:blink 1.5s infinite}
-.ws-badge.connected .led{background:var(--g)}
-.ws-badge.disconnected .led{background:var(--r);animation:none}
-.ws-badge.connecting .led{background:var(--w)}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0; padding-bottom: 50px;
+        }
 
-#clock{font-size:.72rem;font-family:var(--mono);color:var(--mut)}
-#last-rx{font-size:.65rem;font-family:var(--mono);color:var(--mut)}
+        header {
+            background: var(--card-bg);
+            padding: 20px;
+            border-bottom: 1px solid var(--border-light);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+        }
 
-/* ALERT BANNER */
-#alert-banner{
-  display:none;
-  padding:.75rem 2rem;
-  font-size:.8rem;font-family:var(--mono);
-  border-bottom:1px solid;
-  animation:slideIn .3s ease;
-}
-#alert-banner.WARNING{background:rgba(255,176,32,.1);border-color:rgba(255,176,32,.3);color:var(--w)}
-#alert-banner.CRITICAL{background:rgba(255,77,77,.12);border-color:rgba(255,77,77,.35);color:var(--r)}
-@keyframes slideIn{from{transform:translateY(-100%);opacity:0}to{transform:translateY(0);opacity:1}}
+        .header-left { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+        .header-right { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
 
-/* MAIN LAYOUT */
-.content{padding:1.5rem 2rem;max-width:1400px;margin:auto}
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
 
-/* WAITING STATE */
-#waiting{
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  min-height:60vh;gap:20px;text-align:center;
-}
-.wait-ring{
-  width:80px;height:80px;border-radius:50%;
-  border:2px solid rgba(45,255,140,.15);
-  border-top-color:var(--g);
-  animation:spin 1.2s linear infinite;
-}
-@keyframes spin{to{transform:rotate(360deg)}}
-.wait-title{font-size:1.1rem;font-weight:600;color:#fff}
-.wait-sub{font-size:.8rem;font-family:var(--mono);color:var(--mut);line-height:1.7}
+        .card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 16px;
+            border: 1px solid var(--border-light);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
 
-/* DASHBOARD GRID */
-#dashboard{display:none}
+        .card-wide { grid-column: span 2; }
 
-/* METRICS */
-.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
-.metric{
-  background:var(--s1);
-  border:1px solid rgba(45,255,140,.12);
-  border-radius:14px;padding:1.25rem 1.4rem;
-  position:relative;overflow:hidden;
-  transition:border-color .3s;
-}
-.metric.flash{animation:flash .5s ease}
-@keyframes flash{0%{background:rgba(45,255,140,.15)}100%{background:var(--s1)}}
-.metric-label{font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;color:var(--mut);font-family:var(--mono);margin-bottom:10px}
-.metric-val{font-size:2.4rem;font-weight:800;line-height:1;letter-spacing:-.04em;color:#fff;transition:color .3s}
-.metric-unit{font-size:1.1rem;font-weight:400;color:var(--mut)}
-.metric-status{font-size:.68rem;font-family:var(--mono);margin-top:8px}
-.metric-bar{height:3px;background:rgba(255,255,255,.07);border-radius:2px;margin-top:12px;overflow:hidden}
-.metric-bar-fill{height:100%;border-radius:2px;transition:width .8s ease}
+        .value { font-size: 2.8rem; font-weight: 800; margin: 10px 0; line-height: 1.2; }
+        .label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 2px; color: var(--text-dim); }
+        .sub-text { font-size: 0.9rem; color: var(--text-dim); }
 
-.metric.ok .metric-bar-fill{background:var(--g)}
-.metric.warn .metric-bar-fill{background:var(--w)}
-.metric.crit .metric-bar-fill{background:var(--r)}
-.metric.ok .metric-val{color:var(--g)}
-.metric.warn .metric-val{color:var(--w)}
-.metric.crit .metric-val{color:var(--r)}
-.metric.info .metric-val{color:var(--t)}
-.metric.info .metric-bar-fill{background:var(--t)}
+        .bg-red { background: var(--danger) !important; color: white; }
+        .bg-green { background: var(--success) !important; color: white; }
+        .bg-blue { background: var(--info) !important; color: white; }
 
-.metric-corner{
-  position:absolute;top:12px;right:14px;
-  font-size:.6rem;font-family:var(--mono);
-  padding:2px 7px;border-radius:10px;
-}
-.metric.ok .metric-corner{background:rgba(45,255,140,.12);color:var(--g)}
-.metric.warn .metric-corner{background:rgba(255,176,32,.12);color:var(--w)}
-.metric.crit .metric-corner{background:rgba(255,77,77,.12);color:var(--r)}
-.metric.info .metric-corner{background:rgba(0,212,255,.1);color:var(--t)}
+        .chart-container {
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: 16px;
+            border: 1px solid var(--border-light);
+            height: 300px;
+            width: 100%;
+            box-sizing: border-box;
+        }
 
-/* CHARTS */
-.charts-row{display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-bottom:16px}
-.chart-card{
-  background:var(--s1);border:1px solid rgba(45,255,140,.12);
-  border-radius:14px;padding:1.25rem 1.4rem;
-}
-.card-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px}
-.card-title{font-size:.85rem;font-weight:600;color:#fff}
-.card-sub{font-size:.65rem;font-family:var(--mono);color:var(--mut);margin-bottom:1rem}
-.pts-badge{font-size:.62rem;font-family:var(--mono);color:var(--mut);padding:2px 8px;border:1px solid rgba(45,255,140,.15);border-radius:10px}
+        .led { width: 12px; height: 12px; border-radius: 50%; display: inline-block; margin-right: 8px; background: #475569; }
+        .led.active { background: #4ade80; box-shadow: 0 0 12px #4ade80; }
 
-/* GAUGE */
-.gauge-wrap{display:flex;flex-direction:column;align-items:center;padding:.5rem 0 0}
-.gauge-svg{width:180px;height:100px;overflow:visible}
-.gauge-val{font-size:2rem;font-weight:800;text-anchor:middle;font-family:'Syne',sans-serif}
-.gauge-label{font-size:.6rem;text-anchor:middle;font-family:'IBM Plex Mono',monospace}
+        .alert-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 40px;
+            background: var(--success);
+            color: white;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
 
-/* BOTTOM ROW */
-.bottom-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+        button, select {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 30px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        select {
+            background: var(--card-bg);
+            color: var(--text-main);
+            border: 1px solid var(--border-light);
+            padding: 8px 12px;
+        }
+        button:hover { opacity: 0.9; transform: scale(1.02); }
+        button.active { background: var(--success); }
 
-/* LOG TABLE */
-.log-card{background:var(--s1);border:1px solid rgba(45,255,140,.12);border-radius:14px;overflow:hidden}
-.log-head{padding:1rem 1.4rem .75rem;border-bottom:1px solid rgba(45,255,140,.08);display:flex;justify-content:space-between;align-items:center}
-.log-head-title{font-size:.85rem;font-weight:600;color:#fff}
-.log-count{font-size:.65rem;font-family:var(--mono);color:var(--mut)}
-#log-body{max-height:240px;overflow-y:auto}
-#log-body::-webkit-scrollbar{width:4px}
-#log-body::-webkit-scrollbar-track{background:transparent}
-#log-body::-webkit-scrollbar-thumb{background:rgba(45,255,140,.2);border-radius:2px}
-.log-row{
-  display:grid;grid-template-columns:90px 70px 70px 70px 1fr;
-  padding:7px 1.4rem;border-bottom:1px solid rgba(45,255,140,.04);
-  font-size:.7rem;font-family:var(--mono);
-  transition:background .2s;
-}
-.log-row:hover{background:rgba(45,255,140,.03)}
-.log-row:last-child{border-bottom:none}
-.log-row.new{background:rgba(45,255,140,.07);animation:rowIn .4s ease}
-@keyframes rowIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
-.log-head-row{color:var(--mut);font-size:.62rem;text-transform:uppercase;letter-spacing:.07em;padding:.6rem 1.4rem;background:var(--s2);border-bottom:1px solid rgba(45,255,140,.08)}
+        .theme-toggle { background: transparent; border: 1px solid var(--border-light); color: var(--text-main); }
 
-/* STATUS CARD */
-.status-card{background:var(--s1);border:1px solid rgba(45,255,140,.12);border-radius:14px;padding:1.25rem 1.4rem}
-.status-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(45,255,140,.06)}
-.status-row:last-child{border-bottom:none}
-.sr-left{display:flex;align-items:center;gap:10px}
-.sr-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;background:var(--s2)}
-.sr-name{font-size:.8rem;font-weight:600;color:#fff}
-.sr-desc{font-size:.65rem;font-family:var(--mono);color:var(--mut);margin-top:1px}
-.sr-badge{font-size:.62rem;font-family:var(--mono);padding:3px 9px;border-radius:10px}
-.sr-ok{background:rgba(45,255,140,.12);color:var(--g);border:1px solid rgba(45,255,140,.2)}
-.sr-warn{background:rgba(255,176,32,.1);color:var(--w);border:1px solid rgba(255,176,32,.2)}
-.sr-off{background:rgba(255,77,77,.1);color:var(--r);border:1px solid rgba(255,77,77,.2)}
+        #installBanner {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--card-bg);
+            color: var(--text-main);
+            padding: 12px 24px;
+            border-radius: 40px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+            border: 1px solid var(--accent);
+            display: none;
+            align-items: center;
+            gap: 20px;
+            z-index: 1000;
+        }
 
-@media(max-width:1100px){
-  .metrics{grid-template-columns:repeat(2,1fr)}
-  .charts-row,.bottom-row{grid-template-columns:1fr}
-}
-</style>
+        .gps-link { color: var(--accent); text-decoration: none; margin-top: 8px; }
+        .gps-link:hover { text-decoration: underline; }
+
+        @media (max-width: 900px) { .card-wide { grid-column: span 1; } }
+    </style>
 </head>
 <body>
 
 <header>
-  <div class="logo-wrap">
-    <div class="logo-mark">AC</div>
-    <div>
-      <h1>Acara<span>Sense</span> Pro</h1>
-      <div class="logo-sub">INTELLIGENT CATTLE DIP · LIVE MONITOR</div>
+    <div class="header-left">
+        <h1><i class="fas fa-flask" style="color:var(--accent)"></i> <span data-i18n="title">Acaricide Dip • Smart IoT</span></h1>
+        <div id="alert-badge" class="alert-badge">
+            <i class="fas fa-bell"></i> <span id="alert-text" data-i18n="allNormal">All systems normal</span>
+        </div>
     </div>
-  </div>
-  <div class="header-right">
-    <div id="last-rx">Waiting for hardware...</div>
-    <div id="ws-badge" class="ws-badge connecting"><div class="led"></div><span id="ws-label">CONNECTING</span></div>
-    <div id="clock"></div>
-  </div>
+    <div class="header-right">
+        <label style="display:flex;align-items:center;gap:8px;">
+            <i class="fas fa-flask"></i>
+            <input type="checkbox" id="simulateMode"> <span data-i18n="demoMode">Demo Mode</span>
+        </label>
+        <select id="langSelect" style="width:auto;">
+            <option value="en">🇬🇧 English</option>
+            <option value="sw">🇰🇪 Kiswahili</option>
+            <option value="kis">🌍 Ekegusii</option>
+        </select>
+        <button id="voiceToggle" title="Enable voice alerts"><i class="fas fa-volume-up"></i> <span data-i18n="voice">Voice</span></button>
+        <button id="notifyToggle" title="Enable push notifications"><i class="fas fa-bell"></i> <span data-i18n="notify">Notify</span></button>
+        <button id="exportBtn"><i class="fas fa-download"></i> <span data-i18n="export">Export CSV</span></button>
+        <button id="themeToggle" class="theme-toggle"><i class="fas fa-moon"></i> <span data-i18n="dark">Dark</span></button>
+        <div id="status" style="color:var(--text-dim); font-size:0.8rem; min-width:160px;"><span data-i18n="connecting">Connecting...</span></div>
+    </div>
 </header>
 
-<div id="alert-banner"></div>
-
-<div class="content">
-
-  <!-- WAITING FOR HARDWARE -->
-  <div id="waiting">
-    <div class="wait-ring"></div>
-    <div class="wait-title">Waiting for hardware data...</div>
-    <div class="wait-sub">
-      Make sure your ESP8266 is powered on and connected to WiFi.<br>
-      It should POST to <strong style="color:var(--g)" id="post-url">http://&lt;YOUR_PC_IP&gt;:3000/data</strong><br><br>
-      Expected JSON format from ESP8266:<br>
-      <span style="color:var(--g)">{"temp":24.5, "level":72.3, "conc":1.45, "animals":12}</span>
-    </div>
-  </div>
-
-  <!-- LIVE DASHBOARD (shown when data arrives) -->
-  <div id="dashboard">
-    <div class="metrics">
-      <div class="metric ok" id="m-temp">
-        <div class="metric-label">Temperature · DS18B20</div>
-        <div class="metric-corner" id="temp-status">NORMAL</div>
-        <div class="metric-val"><span id="val-temp">--.-</span><span class="metric-unit"> °C</span></div>
-        <div class="metric-status" id="status-temp" style="color:var(--g)">Optimal range: 20–30°C</div>
-        <div class="metric-bar"><div class="metric-bar-fill" id="bar-temp" style="width:0%"></div></div>
-      </div>
-
-      <div class="metric ok" id="m-level">
-        <div class="metric-label">Tank Level · HC-SR04</div>
-        <div class="metric-corner" id="level-status">OK</div>
-        <div class="metric-val"><span id="val-level">--.-</span><span class="metric-unit"> %</span></div>
-        <div class="metric-status" id="status-level" style="color:var(--g)">Refill below 25%</div>
-        <div class="metric-bar"><div class="metric-bar-fill" id="bar-level" style="width:0%"></div></div>
-      </div>
-
-      <div class="metric info" id="m-conc">
-        <div class="metric-label">Acaricide Conc. · Chem Sensor</div>
-        <div class="metric-corner" id="conc-status">OPTIMAL</div>
-        <div class="metric-val"><span id="val-conc">-.-</span><span class="metric-unit"> %</span></div>
-        <div class="metric-status" id="status-conc" style="color:var(--t)">Target: 1.0–2.0%</div>
-        <div class="metric-bar"><div class="metric-bar-fill" id="bar-conc" style="width:0%"></div></div>
-      </div>
-
-      <div class="metric info" id="m-animals">
-        <div class="metric-label">Animals Dipped · Session</div>
-        <div class="metric-corner" id="animals-status">ACTIVE</div>
-        <div class="metric-val"><span id="val-animals">0</span><span class="metric-unit"> hd</span></div>
-        <div class="metric-status" style="color:var(--t)">Today's dipping count</div>
-        <div class="metric-bar"><div class="metric-bar-fill" id="bar-animals" style="width:0%;background:var(--t)"></div></div>
-      </div>
+<div class="container">
+    <!-- Temperature KPI -->
+    <div class="card" id="temp-card">
+        <i class="fas fa-thermometer-half fa-2x"></i>
+        <div class="label" data-i18n="temperature">Temperature</div>
+        <div class="value" id="temp-val">--</div>
+        <div class="sub-text">&deg;C</div>
     </div>
 
-    <div class="charts-row">
-      <div class="chart-card">
-        <div class="card-head">
-          <div>
-            <div class="card-title">Real-time Sensor Trends</div>
-            <div class="card-sub">Temperature (°C) · Acaricide Concentration (%) · Live from hardware</div>
-          </div>
-          <div class="pts-badge" id="pts-badge">0 pts</div>
-        </div>
-        <div style="position:relative;height:220px"><canvas id="trendChart"></canvas></div>
-      </div>
-
-      <div class="chart-card">
-        <div class="card-title">Tank Level</div>
-        <div class="card-sub">HC-SR04 ultrasonic — live %</div>
-        <div class="gauge-wrap">
-          <svg class="gauge-svg" viewBox="0 0 200 110">
-            <defs>
-              <linearGradient id="gOk" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" style="stop-color:#2dff8c"/>
-                <stop offset="100%" style="stop-color:#00d4ff"/>
-              </linearGradient>
-              <linearGradient id="gWarn" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" style="stop-color:#ffb020"/>
-                <stop offset="100%" style="stop-color:#ff7a00"/>
-              </linearGradient>
-              <linearGradient id="gCrit" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" style="stop-color:#ff4d4d"/>
-                <stop offset="100%" style="stop-color:#ff0055"/>
-              </linearGradient>
-            </defs>
-            <!-- background arc -->
-            <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="12" stroke-linecap="round"/>
-            <!-- value arc -->
-            <path id="gauge-arc" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gOk)" stroke-width="12" stroke-linecap="round" stroke-dasharray="251.2" stroke-dashoffset="251.2" style="transition:stroke-dashoffset 1s ease,stroke .5s"/>
-            <!-- needle -->
-            <line id="gauge-needle" x1="100" y1="100" x2="100" y2="28" stroke="rgba(255,255,255,.3)" stroke-width="2" stroke-linecap="round" style="transform-origin:100px 100px;transition:transform 1s ease"/>
-            <circle cx="100" cy="100" r="6" fill="var(--s1)" stroke="rgba(255,255,255,.3)" stroke-width="1.5"/>
-            <!-- labels -->
-            <text x="16" y="116" fill="#4a6b7a" font-size="9" font-family="IBM Plex Mono">0%</text>
-            <text x="172" y="116" fill="#4a6b7a" font-size="9" font-family="IBM Plex Mono">100%</text>
-            <!-- value -->
-            <text id="gauge-text" class="gauge-val" x="100" y="86" fill="#2dff8c" font-size="28" font-family="Syne" font-weight="800">--%</text>
-            <text class="gauge-label" x="100" y="100" fill="#4a6b7a" font-size="8" font-family="IBM Plex Mono">TANK LEVEL</text>
-          </svg>
-          <div style="font-size:.68rem;font-family:var(--mono);color:var(--mut);text-align:center" id="gauge-sub">Waiting for data...</div>
-        </div>
-      </div>
+    <!-- Depth KPI (HC-SR04) -->
+    <div class="card" id="depth-card">
+        <i class="fas fa-ruler-vertical fa-2x"></i>
+        <div class="label" data-i18n="tankDepth">Tank Depth (Distance)</div>
+        <div class="value" id="depth-val">--</div>
+        <div class="sub-text" id="depth-status" data-i18n="syncing">Syncing...</div>
     </div>
 
-    <div class="bottom-row">
-      <!-- READING LOG -->
-      <div class="log-card">
-        <div class="log-head">
-          <div class="log-head-title">Reading Log</div>
-          <div class="log-count" id="log-count">0 readings</div>
-        </div>
-        <div class="log-head-row" style="display:grid;grid-template-columns:90px 70px 70px 70px 1fr">
-          <span>Time</span><span>Temp</span><span>Level</span><span>Conc</span><span>Status</span>
-        </div>
-        <div id="log-body">
-          <div style="padding:2rem;text-align:center;font-size:.75rem;color:var(--mut);font-family:var(--mono)">No readings yet</div>
-        </div>
-      </div>
-
-      <!-- DEVICE STATUS -->
-      <div class="status-card">
-        <div class="card-title" style="margin-bottom:1rem">Device Status</div>
-        <div class="status-row">
-          <div class="sr-left">
-            <div class="sr-icon">🔧</div>
-            <div><div class="sr-name">Arduino MEGA 2560</div><div class="sr-desc">Main controller · Sensor hub</div></div>
-          </div>
-          <span class="sr-badge" id="badge-mega">WAITING</span>
-        </div>
-        <div class="status-row">
-          <div class="sr-left">
-            <div class="sr-icon">📡</div>
-            <div><div class="sr-name">ESP8266 NodeMCU</div><div class="sr-desc">WiFi gateway · HTTP POST</div></div>
-          </div>
-          <span class="sr-badge" id="badge-esp">WAITING</span>
-        </div>
-        <div class="status-row">
-          <div class="sr-left">
-            <div class="sr-icon">🌡️</div>
-            <div><div class="sr-name">DS18B20</div><div class="sr-desc">Temperature · Pin D2</div></div>
-          </div>
-          <span class="sr-badge" id="badge-temp">WAITING</span>
-        </div>
-        <div class="status-row">
-          <div class="sr-left">
-            <div class="sr-icon">📏</div>
-            <div><div class="sr-name">HC-SR04</div><div class="sr-desc">Ultrasonic level · Trig D7 Echo D8</div></div>
-          </div>
-          <span class="sr-badge" id="badge-hcsr">WAITING</span>
-        </div>
-        <div class="status-row">
-          <div class="sr-left">
-            <div class="sr-icon">🧪</div>
-            <div><div class="sr-name">Chemical Sensor</div><div class="sr-desc">Concentration · Pin A0</div></div>
-          </div>
-          <span class="sr-badge" id="badge-chem">WAITING</span>
-        </div>
-        <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid rgba(45,255,140,.08);font-size:.68rem;font-family:var(--mono);color:var(--mut)">
-          <div>Readings received: <span id="stat-count" style="color:var(--g)">0</span></div>
-          <div>Server: <span style="color:var(--g)">ws://localhost:3000</span></div>
-          <div>ESP8266 → POST: <span id="stat-url" style="color:var(--t)">http://&lt;PC_IP&gt;:3000/data</span></div>
-        </div>
-      </div>
+    <!-- Acaricide Concentration -->
+    <div class="card">
+        <i class="fas fa-vial fa-2x"></i>
+        <div class="label" data-i18n="concentration">Acaricide Conc.</div>
+        <div class="value" id="conc-val">--</div>
+        <div class="sub-text" id="conc-status" data-i18n="checkingMix">Checking Mix...</div>
     </div>
-  </div>
+
+    <!-- GPS Location Card (NEW) -->
+    <div class="card">
+        <i class="fas fa-map-marker-alt fa-2x"></i>
+        <div class="label" data-i18n="gpsLocation">GPS Location</div>
+        <div class="value" id="gps-coords" style="font-size: 1.2rem; word-break: break-all;">--</div>
+        <div class="sub-text" id="gps-accuracy"></div>
+        <a id="gps-map-link" href="#" target="_blank" class="gps-link" style="display:none;">
+            <i class="fas fa-map"></i> <span data-i18n="viewOnMap">View on Map</span>
+        </a>
+        <button id="refreshGpsBtn" style="margin-top:10px; background:var(--info);">
+            <i class="fas fa-sync-alt"></i> <span data-i18n="refreshLocation">Refresh Location</span>
+        </button>
+    </div>
+
+    <!-- Predictive Days Card -->
+    <div class="card">
+        <i class="fas fa-hourglass-half fa-2x"></i>
+        <div class="label" data-i18n="daysToRefill">Est. Days to Refill</div>
+        <div class="value" id="days-left" style="color:var(--accent)">--</div>
+        <div class="sub-text" id="refill-date" data-i18n="calculating">Calculating...</div>
+    </div>
+
+    <!-- Main Trend Chart (wide) -->
+    <div class="card-wide chart-container">
+        <canvas id="mainChart"></canvas>
+    </div>
+
+    <!-- Cattle Count -->
+    <div class="card">
+        <div class="label" data-i18n="cattleCount">Daily Cattle Count</div>
+        <div class="value" id="count-val" style="color:var(--accent)">--</div>
+        <i class="fas fa-cow" style="font-size: 3rem; margin-top: 10px;"></i>
+        <div class="sub-text" id="last-dip-time" data-i18n="lastDip">Last dip: --</div>
+    </div>
+
+    <!-- Weight Chart -->
+    <div class="card chart-container">
+        <canvas id="weightChart"></canvas>
+    </div>
+
+    <!-- Pump Status + Last Weight -->
+    <div class="card">
+        <div style="text-align: left; width: 100%;">
+            <p><span id="spray-led" class="led"></span> <b data-i18n="sprayPump">Spray Pump:</b> <span id="spray-txt" data-i18n="off">OFF</span></p>
+            <p><span id="refill-led" class="led"></span> <b data-i18n="refillPump">Refill Pump:</b> <span id="refill-txt" data-i18n="off">OFF</span></p>
+        </div>
+        <hr style="width:100%; border-color:var(--border-light);">
+        <div class="label" data-i18n="lastWeight">Last Weight Recorded</div>
+        <div class="value" id="weight-val" style="font-size: 1.8rem;">-- g</div>
+    </div>
+</div>
+
+<div id="installBanner">
+    <i class="fas fa-download"></i>
+    <span data-i18n="installPrompt">Install Cattle Dip as an app</span>
+    <button id="installBtn" data-i18n="install">Install</button>
+    <button id="dismissBtn" style="background:transparent; color:var(--text-dim);"><i class="fas fa-times"></i></button>
 </div>
 
 <script>
-// ─── CLOCK ───────────────────────────────────────────────────
-function tick(){document.getElementById('clock').textContent=new Date().toLocaleTimeString('en-KE',{hour12:false})}
-setInterval(tick,1000);tick();
+    (function(){
+        "use strict";
 
-// ─── CHART SETUP ─────────────────────────────────────────────
-const MAX_POINTS = 50;
-const labels=[], tempArr=[], concArr=[];
+        // ==================== CONFIGURATION ====================
+        const CONFIG = {
+            channelId: "3314650",
+            apiKey: "BTZILKVBZTVJJV2T",
+            refreshInterval: 15000
+        };
 
-const trendCtx = document.getElementById('trendChart').getContext('2d');
-const trendChart = new Chart(trendCtx,{
-  type:'line',
-  data:{
-    labels,
-    datasets:[
-      {label:'Temp °C',data:tempArr,borderColor:'#2dff8c',backgroundColor:'rgba(45,255,140,.06)',
-       tension:.4,pointRadius:0,borderWidth:2,yAxisID:'yT'},
-      {label:'Conc %',data:concArr,borderColor:'#00d4ff',backgroundColor:'rgba(0,212,255,.05)',
-       tension:.4,pointRadius:0,borderWidth:2,yAxisID:'yC'}
-    ]
-  },
-  options:{
-    responsive:true,maintainAspectRatio:false,
-    animation:{duration:300},
-    plugins:{legend:{display:false}},
-    scales:{
-      x:{ticks:{color:'#4a6b7a',font:{size:10,family:'IBM Plex Mono'},maxTicksLimit:8},
-         grid:{color:'rgba(45,255,140,.05)'}},
-      yT:{position:'left',ticks:{color:'#2dff8c',font:{size:10,family:'IBM Plex Mono'}},
-          grid:{color:'rgba(45,255,140,.05)'},title:{display:true,text:'°C',color:'#2dff8c',font:{size:10}}},
-      yC:{position:'right',ticks:{color:'#00d4ff',font:{size:10,family:'IBM Plex Mono'}},
-          grid:{display:false},title:{display:true,text:'%',color:'#00d4ff',font:{size:10}}}
-    }
-  }
-});
+        // ==================== TRANSLATIONS (with GPS additions) ====================
+        const i18n = {
+            en: {
+                title: "Acaricide Dip • Smart IoT",
+                allNormal: "All systems normal",
+                demoMode: "Demo Mode",
+                voice: "Voice",
+                notify: "Notify",
+                export: "Export CSV",
+                dark: "Dark",
+                light: "Light",
+                connecting: "Connecting...",
+                temperature: "Temperature",
+                tankDepth: "Tank Depth (Distance)",
+                syncing: "Syncing...",
+                concentration: "Acaricide Conc.",
+                checkingMix: "Checking Mix...",
+                daysToRefill: "Est. Days to Refill",
+                calculating: "Calculating...",
+                cattleCount: "Daily Cattle Count",
+                lastDip: "Last dip: --",
+                sprayPump: "Spray Pump:",
+                refillPump: "Refill Pump:",
+                off: "OFF",
+                active: "ACTIVE",
+                lastWeight: "Last Weight Recorded",
+                installPrompt: "Install Cattle Dip as an app",
+                install: "Install",
+                levelOK: "Level OK",
+                mediumLevel: "Medium Level",
+                criticalRefill: "Critical – Refill!",
+                optimalMix: "Optimal Mix",
+                tooDilute: "Too Dilute",
+                tooStrong: "Too Strong",
+                live: "Live",
+                offline: "Offline / Sync error – retrying...",
+                highTemp: "High temperature",
+                lowTemp: "Low temperature",
+                tankCritical: "Tank critical – Refill!",
+                tankOverfilled: "Tank overfilled",
+                concTooLow: "Acaricide concentration too low",
+                concTooHigh: "Acaricide concentration too high",
+                voiceActivated: "Voice alerts activated.",
+                notificationsEnabled: "Notifications Enabled",
+                alertTitle: "⚠️ Cattle Dip Alert",
+                gpsLocation: "GPS Location",
+                refreshLocation: "Refresh Location",
+                viewOnMap: "View on Map",
+                gpsUnavailable: "Location unavailable",
+                gpsDenied: "Location permission denied",
+                gpsError: "Error getting location",
+                accuracy: "Accuracy"
+            },
+            sw: {
+                title: "Dip ya Acaricide • IoT Smart",
+                allNormal: "Mifumo yote ni sawa",
+                demoMode: "Hali ya Onyesho",
+                voice: "Sauti",
+                notify: "Arifa",
+                export: "Pakua CSV",
+                dark: "Giza",
+                light: "Mwanga",
+                connecting: "Inaunganisha...",
+                temperature: "Joto",
+                tankDepth: "Kina cha Tangi (Umbali)",
+                syncing: "Inasawazisha...",
+                concentration: "Kiwango cha Acaricide",
+                checkingMix: "Inakagua Mchanganyiko...",
+                daysToRefill: "Siku Zilizobaki Kujaza",
+                calculating: "Inahesabu...",
+                cattleCount: "Idadi ya Ng'ombe Kwa Siku",
+                lastDip: "Dip ya mwisho: --",
+                sprayPump: "Pampu ya Kunyunyizia:",
+                refillPump: "Pampu ya Kujaza:",
+                off: "ZIMA",
+                active: "WASHA",
+                lastWeight: "Uzito wa Mwisho",
+                installPrompt: "Sakinisha Cattle Dip kama programu",
+                install: "Sakinisha",
+                levelOK: "Kiwango Sawa",
+                mediumLevel: "Kiwango cha Kati",
+                criticalRefill: "Hali Mbaya – Jaza!",
+                optimalMix: "Mchanganyiko Bora",
+                tooDilute: "Imepungua Sana",
+                tooStrong: "Imekolea Sana",
+                live: "Moja kwa Moja",
+                offline: "Nje ya Mtandao – Inajaribu tena...",
+                highTemp: "Joto la juu",
+                lowTemp: "Joto la chini",
+                tankCritical: "Tangi iko hatarini – Jaza!",
+                tankOverfilled: "Tangi imejaa kupita kiasi",
+                concTooLow: "Kiwango cha acaricide kiko chini sana",
+                concTooHigh: "Kiwango cha acaricide kiko juu sana",
+                voiceActivated: "Arifa za sauti zimewashwa.",
+                notificationsEnabled: "Arifa Zimewashwa",
+                alertTitle: "⚠️ Tahadhari ya Dip ya Ng'ombe",
+                gpsLocation: "Mahali pa GPS",
+                refreshLocation: "Sasisha Mahali",
+                viewOnMap: "Tazama kwenye Ramani",
+                gpsUnavailable: "Mahali hapatikani",
+                gpsDenied: "Ruhusa ya mahali imekataliwa",
+                gpsError: "Hitilafu kupata mahali",
+                accuracy: "Usahihi"
+            },
+            kis: {
+                title: "Rituko ria Acaricide • IoT Smart",
+                allNormal: "Ebiee bionsi nigo buna",
+                demoMode: "Enemo ria Okorokia",
+                voice: "Amang'ana",
+                notify: "Amanyore",
+                export: "Kurusia CSV",
+                dark: "Giza",
+                light: "Oborabu",
+                connecting: "Korangeria...",
+                temperature: "Enyang'a",
+                tankDepth: "Obworai bwe Etangi (Oborai)",
+                syncing: "Korwana...",
+                concentration: "Ekiagio kia Acaricide",
+                checkingMix: "Korigeria Ekianganyi...",
+                daysToRefill: "Amang'ana Konya Kogecha",
+                calculating: "Kobara...",
+                cattleCount: "Oborio bwe Ng'ombe Rituko",
+                lastDip: "Rituko ria mwiso: --",
+                sprayPump: "Enchombe ya Konyunyusia:",
+                refillPump: "Enchombe ya Kogecha:",
+                off: "TIMOROKI",
+                active: "EGOKORA",
+                lastWeight: "Oborito bwe Mwiso",
+                installPrompt: "Enoka Cattle Dip buna porogaramu",
+                install: "Enoka",
+                levelOK: "Ekero Nayio",
+                mediumLevel: "Ekero Gati",
+                criticalRefill: "Obotambe – Gecha!",
+                optimalMix: "Ekianganyi Ekenene",
+                tooDilute: "Nekeene Mono",
+                tooStrong: "Nekeene Mono",
+                live: "Konya Konya",
+                offline: "Tori nde – Togetage...",
+                highTemp: "Enyang'a enene",
+                lowTemp: "Enyang'a enke",
+                tankCritical: "Etangi ere ase obotambe – Gecha!",
+                tankOverfilled: "Etangi eiorerete mono",
+                concTooLow: "Ekiagio kia acaricide nakeene mono",
+                concTooHigh: "Ekiagio kia acaricide nene mono",
+                voiceActivated: "Amang'ana amanyore nigo atureirwe.",
+                notificationsEnabled: "Amanyore nigo atureirwe",
+                alertTitle: "⚠️ Amanyore a Rituko ria Ng'ombe",
+                gpsLocation: "Ense ya GPS",
+                refreshLocation: "Rusia Ense",
+                viewOnMap: "Rora ase Ramani",
+                gpsUnavailable: "Ense tigorokwanekana",
+                gpsDenied: "Obosio bwe ense bokatirwe",
+                gpsError: "Obotambe korwa ense",
+                accuracy: "Obwenge"
+            }
+        };
 
-// ─── GAUGE ────────────────────────────────────────────────────
-const ARC_LEN = 251.2;
-function setGauge(pct){
-  const p = Math.min(100,Math.max(0,pct));
-  const offset = ARC_LEN - (ARC_LEN * p / 100);
-  const arc = document.getElementById('gauge-arc');
-  arc.style.strokeDashoffset = offset;
-  // color
-  if(p<=15)       arc.style.stroke='url(#gCrit)';
-  else if(p<=25)  arc.style.stroke='url(#gWarn)';
-  else            arc.style.stroke='url(#gOk)';
-  // needle
-  const deg = -90 + (p/100)*180;
-  document.getElementById('gauge-needle').style.transform=`rotate(${deg}deg)`;
-  const gText = document.getElementById('gauge-text');
-  gText.textContent = p.toFixed(1)+'%';
-  gText.setAttribute('fill', p<=15?'#ff4d4d':p<=25?'#ffb020':'#2dff8c');
-  const sub = p<=15?'⚠ CRITICAL — Refill immediately!':p<=25?'LOW — Schedule refill':'Normal level';
-  document.getElementById('gauge-sub').textContent=sub;
-  document.getElementById('gauge-sub').style.color=p<=15?'#ff4d4d':p<=25?'#ffb020':'#4a6b7a';
-}
+        let currentLang = localStorage.getItem('cattleDipLang') || 'en';
 
-// ─── METRIC UPDATER ──────────────────────────────────────────
-let readingCount = 0;
-let logRows = 0;
+        // ==================== APPLY TRANSLATIONS ====================
+        function applyTranslations(lang) {
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (i18n[lang] && i18n[lang][key]) {
+                    if (el.tagName === 'INPUT' && el.type === 'checkbox') {
+                        // Skip
+                    } else {
+                        el.textContent = i18n[lang][key];
+                    }
+                }
+            });
+            // Update dynamic placeholders
+            const lastDipSpan = document.getElementById('last-dip-time');
+            if (lastDipSpan && lastDipSpan.getAttribute('data-last-time')) {
+                const time = lastDipSpan.getAttribute('data-last-time');
+                lastDipSpan.textContent = `${i18n[lang].lastDip.replace('--', time)}`;
+            }
+            // Update status if it had a custom message
+            const statusEl = document.getElementById('status');
+            if (statusEl && statusEl.getAttribute('data-status')) {
+                statusEl.innerHTML = statusEl.getAttribute('data-status');
+            }
+            // Update chart labels
+            if (mainChart) {
+                mainChart.data.datasets[0].label = i18n[lang].temperature + ' (°C)';
+                mainChart.data.datasets[1].label = i18n[lang].concentration + ' (%)';
+                mainChart.options.scales.y.title.text = i18n[lang].temperature + ' °C';
+                mainChart.options.scales.y1.title.text = i18n[lang].concentration + ' %';
+                mainChart.update();
+            }
+            if (weightChart) {
+                weightChart.data.datasets[0].label = i18n[lang].lastWeight + ' (g)';
+                weightChart.update();
+            }
+            // Update GPS accuracy label
+            const accEl = document.getElementById('gps-accuracy');
+            if (accEl && accEl.getAttribute('data-accuracy')) {
+                const acc = accEl.getAttribute('data-accuracy');
+                accEl.textContent = `${i18n[lang].accuracy}: ${acc} m`;
+            }
+        }
 
-function updateMetric(id,valId,barId,statusId,cornerId,val,unit,pct,state,statusTxt,cornerTxt){
-  const card=document.getElementById(id);
-  card.className='metric '+state+' flash';
-  setTimeout(()=>card.classList.remove('flash'),500);
-  document.getElementById(valId).textContent=val;
-  document.getElementById(barId).style.width=Math.min(100,pct)+'%';
-  document.getElementById(statusId).textContent=statusTxt;
-  document.getElementById(statusId).style.color=state==='ok'?'var(--g)':state==='warn'?'var(--w)':state==='crit'?'var(--r)':'var(--t)';
-  document.getElementById(cornerId).textContent=cornerTxt;
-}
+        // ==================== GPS LOCATION ====================
+        function updateGpsDisplay(position) {
+            const lat = position.coords.latitude.toFixed(6);
+            const lon = position.coords.longitude.toFixed(6);
+            const acc = position.coords.accuracy.toFixed(1);
+            
+            document.getElementById('gps-coords').innerHTML = `${lat}, ${lon}`;
+            const accEl = document.getElementById('gps-accuracy');
+            accEl.textContent = `${i18n[currentLang].accuracy}: ${acc} m`;
+            accEl.setAttribute('data-accuracy', acc);
+            
+            const mapLink = document.getElementById('gps-map-link');
+            mapLink.href = `https://maps.google.com/?q=${lat},${lon}`;
+            mapLink.style.display = 'inline-block';
+        }
 
-function applyReading(r){
-  const {temp,level,conc,animals,ts} = r;
-  readingCount++;
+        function handleGpsError(error) {
+            const coordsEl = document.getElementById('gps-coords');
+            const accEl = document.getElementById('gps-accuracy');
+            const mapLink = document.getElementById('gps-map-link');
+            
+            mapLink.style.display = 'none';
+            
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    coordsEl.textContent = i18n[currentLang].gpsDenied;
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    coordsEl.textContent = i18n[currentLang].gpsUnavailable;
+                    break;
+                case error.TIMEOUT:
+                    coordsEl.textContent = i18n[currentLang].gpsError;
+                    break;
+                default:
+                    coordsEl.textContent = i18n[currentLang].gpsUnavailable;
+            }
+            accEl.textContent = '';
+        }
 
-  // ── Temperature
-  const tPct = ((temp-10)/30)*100;
-  const tState = temp>30?'warn':temp<10?'warn':'ok';
-  updateMetric('m-temp','val-temp','bar-temp','status-temp','temp-status',
-    temp.toFixed(1),'°C',tPct,tState,
-    temp>30?'⚠ Above safe limit':'✓ Within range',
-    temp>30?'HIGH':'NORMAL');
+        function getGpsLocation() {
+            if (!navigator.geolocation) {
+                document.getElementById('gps-coords').textContent = 'Geolocation not supported';
+                return;
+            }
+            
+            document.getElementById('gps-coords').textContent = 'Getting location...';
+            document.getElementById('gps-accuracy').textContent = '';
+            
+            navigator.geolocation.getCurrentPosition(updateGpsDisplay, handleGpsError, {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 60000
+            });
+        }
 
-  // ── Level
-  const lState = level<=15?'crit':level<=25?'warn':'ok';
-  updateMetric('m-level','val-level','bar-level','status-level','level-status',
-    level.toFixed(1),'%',level,lState,
-    level<=15?'⚠ CRITICAL — Refill now!':level<=25?'⚠ LOW — Refill soon':'✓ Adequate level',
-    level<=15?'CRITICAL':level<=25?'LOW':'OK');
+        // ==================== PWA SETUP ====================
+        const manifest = {
+            name: "Cattle Dip Acaricide Monitor",
+            short_name: "CattleDip",
+            start_url: ".",
+            display: "standalone",
+            background_color: "#0f172a",
+            theme_color: "#0f172a",
+            icons: [{ src: "https://cdn-icons-png.flaticon.com/512/1998/1998610.png", sizes: "512x512", type: "image/png" }]
+        };
+        const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
+        document.getElementById('manifest-link').href = URL.createObjectURL(manifestBlob);
 
-  // ── Concentration
-  const cPct = (conc/3)*100;
-  const cState = (conc<1.0||conc>2.0)?'warn':'info';
-  updateMetric('m-conc','val-conc','bar-conc','status-conc','conc-status',
-    conc.toFixed(2),'%',cPct,cState,
-    (conc<1.0||conc>2.0)?'⚠ Out of target range':'✓ Optimal concentration',
-    (conc<1.0||conc>2.0)?'ADJUST':'OPTIMAL');
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                const swCode = `const CACHE_NAME='cattle-dip-v1';self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE_NAME).then(c=>c.addAll(['.','https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css','https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js','https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.2.1/dist/chartjs-plugin-annotation.min.js']))));self.addEventListener('fetch',e=>e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request))));`;
+                navigator.serviceWorker.register(URL.createObjectURL(new Blob([swCode],{type:'application/javascript'})));
+            });
+        }
 
-  // ── Animals
-  const aPct = Math.min(100,(animals/100)*100);
-  updateMetric('m-animals','val-animals','bar-animals','status-animals','animals-status',
-    animals,'hd',aPct,'info','Today\'s session count','ACTIVE');
+        let deferredPrompt;
+        const installBanner = document.getElementById('installBanner');
+        document.getElementById('installBtn').addEventListener('click', () => {
+            if (deferredPrompt) { deferredPrompt.prompt(); deferredPrompt.userChoice.then(() => installBanner.style.display = 'none'); }
+        });
+        document.getElementById('dismissBtn').addEventListener('click', () => installBanner.style.display = 'none');
+        window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; installBanner.style.display = 'flex'; });
 
-  // ── Gauge
-  setGauge(level);
+        // ==================== DASHBOARD STATE ====================
+        let mainChart, weightChart;
+        let historicalFeeds = [];
+        const MAX_HISTORY = 20;
+        let notificationsEnabled = false;
+        let voiceEnabled = false;
+        let lastAlertHash = '';
+        let speechSynth = window.speechSynthesis;
 
-  // ── Chart
-  const t = new Date(ts).toLocaleTimeString('en-KE',{hour12:false,second:'2-digit'});
-  labels.push(t); tempArr.push(temp); concArr.push(conc);
-  if(labels.length>MAX_POINTS){ labels.shift(); tempArr.shift(); concArr.shift(); }
-  trendChart.update('none');
-  document.getElementById('pts-badge').textContent=labels.length+' pts';
+        // ==================== CHART INITIALIZATION ====================
+        function initCharts() {
+            const ctxMain = document.getElementById('mainChart').getContext('2d');
+            mainChart = new Chart(ctxMain, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        { label: i18n[currentLang].temperature + ' (°C)', borderColor: '#ef4444', data: [], tension: 0.3, yAxisID: 'y' },
+                        { label: i18n[currentLang].concentration + ' (%)', borderColor: '#8b5cf6', data: [], tension: 0.3, yAxisID: 'y1' }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: {
+                        y: { type: 'linear', position: 'left', grid: { color: '#334155' }, title: { display: true, text: i18n[currentLang].temperature + ' °C' } },
+                        y1: { type: 'linear', position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: i18n[currentLang].concentration + ' %' } }
+                    },
+                    plugins: {
+                        legend: { labels: { color: '#f8fafc' } },
+                        annotation: {
+                            annotations: {
+                                tempSafe: { type: 'box', yMin: 25, yMax: 32, backgroundColor: 'rgba(34,197,94,0.08)', borderColor: '#22c55e', label: { content: 'Safe Temp', enabled: true } },
+                                concSafe: { type: 'box', yMin: 30, yMax: 60, yScaleID: 'y1', backgroundColor: 'rgba(139,92,246,0.08)', borderColor: '#8b5cf6', label: { content: 'Optimal Conc', enabled: true } }
+                            }
+                        }
+                    }
+                }
+            });
 
-  // ── Log
-  const lb=document.getElementById('log-body');
-  if(logRows===0) lb.innerHTML='';
-  logRows++;
-  const statusStr = level<=15?'<span style="color:var(--r)">CRITICAL</span>':
-                    level<=25?'<span style="color:var(--w)">LOW</span>':
-                    '<span style="color:var(--g)">OK</span>';
-  const row=document.createElement('div');
-  row.className='log-row new';
-  row.innerHTML=`<span>${t}</span><span style="color:var(--g)">${temp.toFixed(1)}°C</span><span style="${level<=25?'color:var(--r)':''}">${level.toFixed(1)}%</span><span style="color:var(--t)">${conc.toFixed(2)}%</span><span>${statusStr}</span>`;
-  lb.insertBefore(row,lb.firstChild);
-  // keep max 100 rows
-  while(lb.children.length>100) lb.removeChild(lb.lastChild);
-  document.getElementById('log-count').textContent=logRows+' readings';
-  document.getElementById('stat-count').textContent=readingCount;
+            const ctxWeight = document.getElementById('weightChart').getContext('2d');
+            weightChart = new Chart(ctxWeight, {
+                type: 'bar',
+                data: { labels: [], datasets: [{ label: i18n[currentLang].lastWeight + ' (g)', backgroundColor: '#3b82f6', data: [] }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#f8fafc' } } }, scales: { y: { grid: { color: '#334155' } } } }
+            });
+        }
 
-  // ── Device badges (all online once data arrives)
-  ['mega','esp','temp','hcsr','chem'].forEach(id=>{
-    const el=document.getElementById('badge-'+id);
-    el.textContent='ONLINE'; el.className='sr-badge sr-ok';
-  });
-  // Flag sensors with issues
-  if(temp===-999){
-    document.getElementById('badge-temp').textContent='ERROR';
-    document.getElementById('badge-temp').className='sr-badge sr-off';
-  }
-  if(level<=15) document.getElementById('badge-hcsr').className='sr-badge sr-warn';
-  if(conc<1.0||conc>2.0) document.getElementById('badge-chem').className='sr-badge sr-warn';
+        // ==================== PREDICTIVE REFILL ====================
+        function updatePrediction(feeds) {
+            if (!feeds.length) return;
+            const recent = feeds.slice(-7).filter(f => f.field3);
+            if (recent.length < 2) return;
+            const avgDaily = recent.map(f => parseFloat(f.field3)||0).reduce((a,b)=>a+b,0)/recent.length;
+            const dailyUsage = avgDaily * 0.25;
+            const currentDistance = parseFloat(feeds[feeds.length-1].field2);
+            const daysLeft = (8.0 - currentDistance) / dailyUsage;
+            document.getElementById('days-left').innerText = Math.max(0, daysLeft).toFixed(1);
+            const refillDate = new Date(Date.now() + daysLeft * 86400000);
+            document.getElementById('refill-date').innerText = daysLeft > 0 ? `Refill ~ ${refillDate.toLocaleDateString()}` : i18n[currentLang].criticalRefill;
+        }
 
-  // ── Last received
-  document.getElementById('last-rx').textContent='Last rx: '+t;
-}
+        // ==================== VOICE & NOTIFICATIONS ====================
+        function speakAlert(message) {
+            if (!voiceEnabled || !speechSynth) return;
+            if (speechSynth.speaking) speechSynth.cancel();
+            const utterance = new SpeechSynthesisUtterance(message);
+            utterance.lang = currentLang === 'sw' ? 'sw-KE' : (currentLang === 'kis' ? 'sw-KE' : 'en-US');
+            speechSynth.speak(utterance);
+        }
 
-// ─── ALERT BANNER ────────────────────────────────────────────
-function showAlert(alert){
-  if(!alert) { document.getElementById('alert-banner').style.display='none'; return; }
-  const b=document.getElementById('alert-banner');
-  b.style.display='block';
-  b.className=alert.type;
-  b.textContent=(alert.type==='CRITICAL'?'🔴':'🟡')+' '+alert.message;
-}
+        function sendNotification(title, body) {
+            if (!("Notification" in window) || !notificationsEnabled) return;
+            if (Notification.permission === "granted") {
+                new Notification(title, { body, icon: 'https://cdn-icons-png.flaticon.com/512/1998/1998610.png', requireInteraction: true });
+            }
+        }
 
-// ─── WEBSOCKET ───────────────────────────────────────────────
-let ws, reconnectTimer;
+        function updateAlerts(temp, distance, conc) {
+            const alerts = [];
+            if (temp > 32) alerts.push(i18n[currentLang].highTemp);
+            if (temp < 20) alerts.push(i18n[currentLang].lowTemp);
+            if (distance > 8) alerts.push(i18n[currentLang].tankCritical);
+            if (distance < 3) alerts.push(i18n[currentLang].tankOverfilled);
+            if (conc < 20) alerts.push(i18n[currentLang].concTooLow);
+            if (conc > 70) alerts.push(i18n[currentLang].concTooHigh);
+            
+            const alertSpan = document.getElementById('alert-text');
+            const alertMessage = alerts.length ? alerts.join(' • ') : i18n[currentLang].allNormal;
+            document.getElementById('alert-badge').style.background = alerts.length ? '#ef4444' : '#22c55e';
+            alertSpan.textContent = alertMessage;
+            
+            if (alerts.length) {
+                const currentHash = alerts.sort().join('|');
+                if (currentHash !== lastAlertHash) {
+                    lastAlertHash = currentHash;
+                    if (notificationsEnabled) sendNotification(i18n[currentLang].alertTitle, alertMessage);
+                    if (voiceEnabled) speakAlert(i18n[currentLang].alertTitle + '. ' + alerts.join('. '));
+                }
+            } else {
+                lastAlertHash = '';
+            }
+        }
 
-function setWsState(state, label){
-  const badge=document.getElementById('ws-badge');
-  badge.className='ws-badge '+state;
-  document.getElementById('ws-label').textContent=label;
-}
+        // ==================== UPDATE UI ====================
+        function updateCards(feed) {
+            const t = parseFloat(feed.field1)||0, d = parseFloat(feed.field2)||0, conc = parseFloat(feed.field7)||0;
+            document.getElementById('temp-val').innerText = t.toFixed(1);
+            document.getElementById('temp-card').className = (t>=20 && t<=32) ? 'card bg-green' : 'card bg-red';
+            
+            document.getElementById('depth-val').innerText = d.toFixed(1) + " cm";
+            const dCard = document.getElementById('depth-card'), dStat = document.getElementById('depth-status');
+            if (d < 5) { dCard.className='card bg-green'; dStat.textContent = i18n[currentLang].levelOK; }
+            else if (d <= 8) { dCard.className='card bg-blue'; dStat.textContent = i18n[currentLang].mediumLevel; }
+            else { dCard.className='card bg-red'; dStat.textContent = i18n[currentLang].criticalRefill; }
+            
+            document.getElementById('conc-val').innerText = conc.toFixed(1);
+            const concStat = document.getElementById('conc-status');
+            if (conc>=30 && conc<=60) concStat.textContent = i18n[currentLang].optimalMix;
+            else if (conc<30) concStat.textContent = i18n[currentLang].tooDilute;
+            else concStat.textContent = i18n[currentLang].tooStrong;
+            
+            document.getElementById('count-val').innerText = feed.field3 || "0";
+            document.getElementById('weight-val').innerText = (parseInt(feed.field6)||0) + ' g';
+            
+            const lastDipSpan = document.getElementById('last-dip-time');
+            const time = feed.created_at ? new Date(feed.created_at).toLocaleTimeString() : '--';
+            lastDipSpan.textContent = i18n[currentLang].lastDip.replace('--', time);
+            lastDipSpan.setAttribute('data-last-time', time);
+            
+            togglePump('spray', feed.field4); togglePump('refill', feed.field5);
+            updateAlerts(t, d, conc);
+        }
 
-function connect(){
-  setWsState('connecting','CONNECTING');
-  try { ws = new WebSocket('ws://'+location.host); }
-  catch(e){ retry(); return; }
+        function togglePump(id, val) {
+            const led = document.getElementById(id+'-led'), txt = document.getElementById(id+'-txt');
+            if (parseInt(val)===1) { led.classList.add('active'); txt.textContent = i18n[currentLang].active; txt.style.color="#4ade80"; }
+            else { led.classList.remove('active'); txt.textContent = i18n[currentLang].off; txt.style.color="#94a3b8"; }
+        }
 
-  ws.onopen = ()=>{ setWsState('connected','LIVE'); };
+        function updateGraphs(feeds) {
+            if (!feeds.length) return;
+            const labels = feeds.map(f => new Date(f.created_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}));
+            mainChart.data.labels = labels;
+            mainChart.data.datasets[0].data = feeds.map(f => parseFloat(f.field1)||null);
+            mainChart.data.datasets[1].data = feeds.map(f => parseFloat(f.field7)||null);
+            mainChart.update('none');
+            weightChart.data.labels = labels;
+            weightChart.data.datasets[0].data = feeds.map(f => parseFloat(f.field6)||null);
+            weightChart.update('none');
+        }
 
-  ws.onmessage = (e)=>{
-    const msg = JSON.parse(e.data);
-    if(msg.type==='update'){
-      // Show dashboard, hide waiting
-      document.getElementById('waiting').style.display='none';
-      document.getElementById('dashboard').style.display='block';
-      applyReading(msg.reading);
-      showAlert(msg.alert);
-    }
-  };
+        // ==================== SIMULATION & FETCH ====================
+        function generateSimulatedFeed() {
+            const last = historicalFeeds.length ? historicalFeeds[historicalFeeds.length-1] : null;
+            const baseTemp = last ? parseFloat(last.field1) : 28;
+            const baseDistance = last ? parseFloat(last.field2) : 6;
+            const baseConc = last ? parseFloat(last.field7) : 45;
+            return {
+                created_at: new Date().toISOString(),
+                field1: Math.max(18, Math.min(38, baseTemp + (Math.random()-0.5)*2)).toFixed(1),
+                field2: Math.max(3, Math.min(12, baseDistance + 0.05 + (Math.random()-0.3)*0.6)).toFixed(1),
+                field3: Math.floor(20 + Math.random()*40),
+                field4: Math.random() > 0.7 ? 1 : 0,
+                field5: (baseDistance > 8) ? 1 : 0,
+                field6: Math.floor(350 + Math.random()*250),
+                field7: Math.max(10, Math.min(80, baseConc + (Math.random()-0.5)*5)).toFixed(1)
+            };
+        }
 
-  ws.onclose = ()=>{ setWsState('disconnected','OFFLINE'); retry(); };
-  ws.onerror = ()=>{ setWsState('disconnected','ERROR'); };
-}
+        async function fetchRealData() {
+            const url = `https://api.thingspeak.com/channels/${CONFIG.channelId}/feeds.json?api_key=${CONFIG.apiKey}&results=20`;
+            const res = await fetch(url);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            return (await res.json()).feeds || [];
+        }
 
-function retry(){
-  clearTimeout(reconnectTimer);
-  reconnectTimer=setTimeout(connect,3000);
-}
+        async function sync() {
+            const statusEl = document.getElementById('status');
+            try {
+                let feeds;
+                if (document.getElementById('simulateMode').checked) {
+                    const newPoint = generateSimulatedFeed();
+                    historicalFeeds.push(newPoint);
+                    if (historicalFeeds.length > MAX_HISTORY) historicalFeeds.shift();
+                    feeds = [...historicalFeeds];
+                } else {
+                    feeds = await fetchRealData();
+                    historicalFeeds = feeds;
+                }
+                if (!feeds.length) throw new Error('No data');
+                updateCards(feeds[feeds.length-1]);
+                updateGraphs(feeds);
+                updatePrediction(feeds);
+                statusEl.innerHTML = `✅ ${i18n[currentLang].live} • ${new Date().toLocaleTimeString()}`;
+                if (document.getElementById('simulateMode').checked) statusEl.innerHTML += ' <span style="color:var(--warning)">(Demo)</span>';
+                statusEl.setAttribute('data-status', statusEl.innerHTML);
+            } catch (e) {
+                statusEl.innerHTML = `⚠️ ${i18n[currentLang].offline}`;
+                statusEl.setAttribute('data-status', statusEl.innerHTML);
+            }
+        }
 
-connect();
+        // ==================== LANGUAGE SWITCHER ====================
+        function setupLanguage() {
+            const select = document.getElementById('langSelect');
+            select.value = currentLang;
+            select.addEventListener('change', (e) => {
+                currentLang = e.target.value;
+                localStorage.setItem('cattleDipLang', currentLang);
+                applyTranslations(currentLang);
+                if (historicalFeeds.length) {
+                    updateCards(historicalFeeds[historicalFeeds.length-1]);
+                    updatePrediction(historicalFeeds);
+                }
+                document.getElementById('status').innerHTML = document.getElementById('status').getAttribute('data-status') || i18n[currentLang].connecting;
+                if (mainChart) {
+                    mainChart.options.scales.y.title.text = i18n[currentLang].temperature + ' °C';
+                    mainChart.options.scales.y1.title.text = i18n[currentLang].concentration + ' %';
+                    mainChart.data.datasets[0].label = i18n[currentLang].temperature + ' (°C)';
+                    mainChart.data.datasets[1].label = i18n[currentLang].concentration + ' (%)';
+                    mainChart.update();
+                }
+                if (weightChart) {
+                    weightChart.data.datasets[0].label = i18n[currentLang].lastWeight + ' (g)';
+                    weightChart.update();
+                }
+                const themeBtn = document.getElementById('themeToggle');
+                const isLight = document.body.classList.contains('light');
+                themeBtn.innerHTML = `<i class="fas ${isLight ? 'fa-sun' : 'fa-moon'}"></i> ${isLight ? i18n[currentLang].light : i18n[currentLang].dark}`;
+            });
+            applyTranslations(currentLang);
+        }
+
+        // ==================== INIT ====================
+        function init() {
+            initCharts();
+            setupLanguage();
+            
+            // GPS Setup
+            getGpsLocation();
+            document.getElementById('refreshGpsBtn').addEventListener('click', getGpsLocation);
+            
+            document.getElementById('exportBtn').addEventListener('click', () => window.open(`https://api.thingspeak.com/channels/${CONFIG.channelId}/feeds.csv?api_key=${CONFIG.apiKey}&results=8000`, '_blank'));
+            
+            const themeBtn = document.getElementById('themeToggle');
+            themeBtn.addEventListener('click', () => {
+                document.body.classList.toggle('light');
+                const isLight = document.body.classList.contains('light');
+                themeBtn.innerHTML = `<i class="fas ${isLight ? 'fa-sun' : 'fa-moon'}"></i> ${isLight ? i18n[currentLang].light : i18n[currentLang].dark}`;
+                if (mainChart) { mainChart.options.scales.y.grid.color = isLight ? '#cbd5e1' : '#334155'; mainChart.update(); }
+            });
+            
+            const notifyBtn = document.getElementById('notifyToggle');
+            if ("Notification" in window && Notification.permission === "granted") {
+                notificationsEnabled = true; notifyBtn.classList.add('active'); notifyBtn.innerHTML = '<i class="fas fa-bell"></i> Notify On';
+            }
+            notifyBtn.addEventListener('click', () => {
+                if (!("Notification" in window)) return alert("Notifications not supported");
+                if (Notification.permission === "granted") {
+                    notificationsEnabled = !notificationsEnabled;
+                    notifyBtn.classList.toggle('active', notificationsEnabled);
+                    notifyBtn.innerHTML = notificationsEnabled ? '<i class="fas fa-bell"></i> Notify On' : '<i class="fas fa-bell-slash"></i> Notify Off';
+                } else if (Notification.permission !== "denied") {
+                    Notification.requestPermission().then(perm => { if (perm === "granted") { notificationsEnabled = true; notifyBtn.classList.add('active'); notifyBtn.innerHTML = '<i class="fas fa-bell"></i> Notify On'; } });
+                }
+            });
+            
+            const voiceBtn = document.getElementById('voiceToggle');
+            if ('speechSynthesis' in window) {
+                voiceBtn.addEventListener('click', () => {
+                    voiceEnabled = !voiceEnabled;
+                    voiceBtn.classList.toggle('active', voiceEnabled);
+                    voiceBtn.innerHTML = voiceEnabled ? '<i class="fas fa-volume-up"></i> Voice On' : '<i class="fas fa-volume-off"></i> Voice Off';
+                    if (voiceEnabled) { const u = new SpeechSynthesisUtterance(''); u.volume=0; speechSynthesis.speak(u); setTimeout(() => speakAlert(i18n[currentLang].voiceActivated), 100); }
+                    else { if (speechSynthesis.speaking) speechSynthesis.cancel(); }
+                });
+            } else voiceBtn.disabled = true;
+            
+            sync();
+            setInterval(sync, CONFIG.refreshInterval);
+        }
+
+        init();
+    })();
 </script>
 </body>
 </html>
