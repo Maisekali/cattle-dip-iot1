@@ -19,6 +19,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.2.1/dist/chartjs-plugin-annotation.min.js"></script>
     
     <style>
+        /* [All styles unchanged from previous version] */
         :root {
             --bg: #0f172a;
             --card-bg: #1e293b;
@@ -161,6 +162,8 @@
         .gps-link { color: var(--accent); text-decoration: none; margin-top: 8px; }
         .gps-link:hover { text-decoration: underline; }
 
+        .location-name { font-size: 1.1rem; margin-top: 5px; color: var(--accent); text-align: center; }
+
         @media (max-width: 900px) { .card-wide { grid-column: span 1; } }
     </style>
 </head>
@@ -216,7 +219,7 @@
         <div class="sub-text" id="conc-status" data-i18n="checkingMix">Checking Mix...</div>
     </div>
 
-    <!-- GPS Location Card (NEW) -->
+    <!-- GPS Location Card (with reverse geocode) -->
     <div class="card">
         <i class="fas fa-map-marker-alt fa-2x"></i>
         <div class="label" data-i18n="gpsLocation">GPS Location</div>
@@ -256,7 +259,7 @@
         <canvas id="weightChart"></canvas>
     </div>
 
-    <!-- Pump Status + Last Weight -->
+    <!-- Pump Status + Last Weight + Location Name -->
     <div class="card">
         <div style="text-align: left; width: 100%;">
             <p><span id="spray-led" class="led"></span> <b data-i18n="sprayPump">Spray Pump:</b> <span id="spray-txt" data-i18n="off">OFF</span></p>
@@ -265,6 +268,12 @@
         <hr style="width:100%; border-color:var(--border-light);">
         <div class="label" data-i18n="lastWeight">Last Weight Recorded</div>
         <div class="value" id="weight-val" style="font-size: 1.8rem;">-- g</div>
+        <hr style="width:100%; border-color:var(--border-light); margin-top:15px;">
+        <div class="label" data-i18n="siteLocation">Site Location</div>
+        <div id="location-name-display" class="location-name">
+            <i class="fas fa-location-dot"></i> <span id="location-name-text">--</span>
+        </div>
+        <div class="sub-text" id="location-coords-small" style="margin-top:4px;"></div>
     </div>
 </div>
 
@@ -286,7 +295,7 @@
             refreshInterval: 15000
         };
 
-        // ==================== TRANSLATIONS (with GPS additions) ====================
+        // ==================== TRANSLATIONS (with location name additions) ====================
         const i18n = {
             en: {
                 title: "Acaricide Dip • Smart IoT",
@@ -337,7 +346,10 @@
                 gpsUnavailable: "Location unavailable",
                 gpsDenied: "Location permission denied",
                 gpsError: "Error getting location",
-                accuracy: "Accuracy"
+                accuracy: "Accuracy",
+                siteLocation: "Site Location",
+                fetchingLocation: "Fetching location name...",
+                locationUnknown: "Unknown location"
             },
             sw: {
                 title: "Dip ya Acaricide • IoT Smart",
@@ -388,7 +400,10 @@
                 gpsUnavailable: "Mahali hapatikani",
                 gpsDenied: "Ruhusa ya mahali imekataliwa",
                 gpsError: "Hitilafu kupata mahali",
-                accuracy: "Usahihi"
+                accuracy: "Usahihi",
+                siteLocation: "Eneo la Tovuti",
+                fetchingLocation: "Inatafuta jina la eneo...",
+                locationUnknown: "Eneo halijulikani"
             },
             kis: {
                 title: "Rituko ria Acaricide • IoT Smart",
@@ -439,11 +454,15 @@
                 gpsUnavailable: "Ense tigorokwanekana",
                 gpsDenied: "Obosio bwe ense bokatirwe",
                 gpsError: "Obotambe korwa ense",
-                accuracy: "Obwenge"
+                accuracy: "Obwenge",
+                siteLocation: "Ense Y'omo",
+                fetchingLocation: "Korigeria erieta ria ense...",
+                locationUnknown: "Ense tayamanyekanete"
             }
         };
 
         let currentLang = localStorage.getItem('cattleDipLang') || 'en';
+        let currentPosition = null; // Store last GPS position
 
         // ==================== APPLY TRANSLATIONS ====================
         function applyTranslations(lang) {
@@ -463,12 +482,10 @@
                 const time = lastDipSpan.getAttribute('data-last-time');
                 lastDipSpan.textContent = `${i18n[lang].lastDip.replace('--', time)}`;
             }
-            // Update status if it had a custom message
             const statusEl = document.getElementById('status');
             if (statusEl && statusEl.getAttribute('data-status')) {
                 statusEl.innerHTML = statusEl.getAttribute('data-status');
             }
-            // Update chart labels
             if (mainChart) {
                 mainChart.data.datasets[0].label = i18n[lang].temperature + ' (°C)';
                 mainChart.data.datasets[1].label = i18n[lang].concentration + ' (%)';
@@ -480,7 +497,6 @@
                 weightChart.data.datasets[0].label = i18n[lang].lastWeight + ' (g)';
                 weightChart.update();
             }
-            // Update GPS accuracy label
             const accEl = document.getElementById('gps-accuracy');
             if (accEl && accEl.getAttribute('data-accuracy')) {
                 const acc = accEl.getAttribute('data-accuracy');
@@ -488,13 +504,55 @@
             }
         }
 
+        // ==================== REVERSE GEOCODING ====================
+        async function fetchLocationName(lat, lon) {
+            const displayEl = document.getElementById('location-name-text');
+            const smallCoords = document.getElementById('location-coords-small');
+            displayEl.textContent = i18n[currentLang].fetchingLocation;
+            smallCoords.textContent = `${lat.toFixed(6)}, ${lon.toFixed(6)}`;
+            
+            try {
+                // Using Nominatim (OpenStreetMap) - please respect usage policy
+                const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=14&addressdetails=1`;
+                const response = await fetch(url, {
+                    headers: { 'Accept-Language': currentLang === 'sw' ? 'sw' : (currentLang === 'kis' ? 'sw' : 'en') }
+                });
+                const data = await response.json();
+                
+                let locationName = '';
+                if (data.address) {
+                    // Build a concise location string: e.g., "Lurambi, Kakamega"
+                    const parts = [];
+                    if (data.address.village || data.address.neighbourhood || data.address.suburb) {
+                        parts.push(data.address.village || data.address.neighbourhood || data.address.suburb);
+                    }
+                    if (data.address.town || data.address.city) {
+                        parts.push(data.address.town || data.address.city);
+                    } else if (data.address.county) {
+                        parts.push(data.address.county);
+                    }
+                    if (data.address.state) parts.push(data.address.state);
+                    locationName = parts.join(', ');
+                }
+                if (!locationName && data.display_name) {
+                    // Fallback to first part of display_name
+                    locationName = data.display_name.split(',')[0];
+                }
+                displayEl.textContent = locationName || i18n[currentLang].locationUnknown;
+            } catch (error) {
+                console.warn('Geocoding error:', error);
+                displayEl.textContent = i18n[currentLang].locationUnknown;
+            }
+        }
+
         // ==================== GPS LOCATION ====================
         function updateGpsDisplay(position) {
-            const lat = position.coords.latitude.toFixed(6);
-            const lon = position.coords.longitude.toFixed(6);
+            currentPosition = position;
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
             const acc = position.coords.accuracy.toFixed(1);
             
-            document.getElementById('gps-coords').innerHTML = `${lat}, ${lon}`;
+            document.getElementById('gps-coords').innerHTML = `${lat.toFixed(6)}, ${lon.toFixed(6)}`;
             const accEl = document.getElementById('gps-accuracy');
             accEl.textContent = `${i18n[currentLang].accuracy}: ${acc} m`;
             accEl.setAttribute('data-accuracy', acc);
@@ -502,14 +560,19 @@
             const mapLink = document.getElementById('gps-map-link');
             mapLink.href = `https://maps.google.com/?q=${lat},${lon}`;
             mapLink.style.display = 'inline-block';
+            
+            // Fetch location name
+            fetchLocationName(lat, lon);
         }
 
         function handleGpsError(error) {
             const coordsEl = document.getElementById('gps-coords');
             const accEl = document.getElementById('gps-accuracy');
             const mapLink = document.getElementById('gps-map-link');
+            const displayEl = document.getElementById('location-name-text');
             
             mapLink.style.display = 'none';
+            displayEl.textContent = i18n[currentLang].gpsUnavailable;
             
             switch(error.code) {
                 case error.PERMISSION_DENIED:
@@ -543,7 +606,7 @@
             });
         }
 
-        // ==================== PWA SETUP ====================
+        // ==================== PWA SETUP (unchanged) ====================
         const manifest = {
             name: "Cattle Dip Acaricide Monitor",
             short_name: "CattleDip",
@@ -800,6 +863,10 @@
                 const themeBtn = document.getElementById('themeToggle');
                 const isLight = document.body.classList.contains('light');
                 themeBtn.innerHTML = `<i class="fas ${isLight ? 'fa-sun' : 'fa-moon'}"></i> ${isLight ? i18n[currentLang].light : i18n[currentLang].dark}`;
+                // Refresh location name with new language if position available
+                if (currentPosition) {
+                    fetchLocationName(currentPosition.coords.latitude, currentPosition.coords.longitude);
+                }
             });
             applyTranslations(currentLang);
         }
