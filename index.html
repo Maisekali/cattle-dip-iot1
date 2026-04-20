@@ -19,6 +19,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.2.1/dist/chartjs-plugin-annotation.min.js"></script>
     
     <style>
+        /* ----- Responsive & Theme Variables ----- */
         :root {
             --bg: #0f172a;
             --card-bg: #1e293b;
@@ -96,27 +97,16 @@
             gap: 15px;
         }
 
-        /* Tablet and up: 2 columns */
         @media (min-width: 640px) {
-            .container {
-                grid-template-columns: repeat(2, 1fr);
-            }
+            .container { grid-template-columns: repeat(2, 1fr); }
         }
 
-        /* Desktop: 3+ columns with wide cards spanning */
         @media (min-width: 1024px) {
-            .container {
-                grid-template-columns: repeat(4, 1fr);
-            }
-            .card-wide {
-                grid-column: span 2;
-            }
+            .container { grid-template-columns: repeat(4, 1fr); }
+            .card-wide { grid-column: span 2; }
         }
 
-        /* Ensure wide cards span full width on mobile */
-        .card-wide {
-            grid-column: 1 / -1;
-        }
+        .card-wide { grid-column: 1 / -1; }
 
         /* ----- CARDS (Touch-friendly) ----- */
         .card {
@@ -129,10 +119,9 @@
             flex-direction: column;
             align-items: center;
             width: 100%;
-            min-width: 0; /* Prevent overflow */
+            min-width: 0;
         }
 
-        /* Value text responsive */
         .value {
             font-size: clamp(2rem, 8vw, 2.8rem);
             font-weight: 800;
@@ -154,16 +143,12 @@
             text-align: center;
         }
 
-        .sub-text {
-            font-size: 0.85rem;
-            color: var(--text-dim);
-            text-align: center;
-        }
+        .sub-text { font-size: 0.85rem; color: var(--text-dim); text-align: center; }
 
         .bg-red, .bg-green, .bg-blue { color: white; }
         .bg-red .sub-text, .bg-green .sub-text, .bg-blue .sub-text { color: rgba(255,255,255,0.8); }
 
-        /* ----- CHART CONTAINERS (Responsive height) ----- */
+        /* ----- CHART CONTAINERS ----- */
         .chart-container {
             background: var(--card-bg);
             padding: 10px;
@@ -174,24 +159,11 @@
             box-sizing: border-box;
         }
 
-        canvas {
-            width: 100% !important;
-            height: 100% !important;
-        }
+        canvas { width: 100% !important; height: 100% !important; }
 
         /* ----- UI CONTROLS ----- */
-        .led {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 8px;
-            background: #475569;
-        }
-        .led.active {
-            background: #4ade80;
-            box-shadow: 0 0 12px #4ade80;
-        }
+        .led { width: 12px; height: 12px; border-radius: 50%; display: inline-block; margin-right: 8px; background: #475569; }
+        .led.active { background: #4ade80; box-shadow: 0 0 12px #4ade80; }
 
         .alert-badge {
             display: inline-block;
@@ -227,21 +199,11 @@
             padding: 8px 10px;
         }
 
-        button:hover {
-            opacity: 0.9;
-            transform: scale(1.02);
-        }
-        button.active {
-            background: var(--success);
-        }
+        button:hover { opacity: 0.9; transform: scale(1.02); }
+        button.active { background: var(--success); }
 
-        .theme-toggle {
-            background: transparent;
-            border: 1px solid var(--border-light);
-            color: var(--text-main);
-        }
+        .theme-toggle { background: transparent; border: 1px solid var(--border-light); color: var(--text-main); }
 
-        /* ----- INSTALL BANNER (Mobile friendly) ----- */
         #installBanner {
             position: fixed;
             bottom: 20px;
@@ -265,12 +227,7 @@
         }
 
         /* ----- GPS & WEATHER SPECIFIC ----- */
-        .gps-link {
-            color: var(--accent);
-            text-decoration: none;
-            margin-top: 8px;
-            font-size: 0.9rem;
-        }
+        .gps-link { color: var(--accent); text-decoration: none; margin-top: 8px; font-size: 0.9rem; }
         .gps-link:hover { text-decoration: underline; }
 
         .location-name {
@@ -289,13 +246,8 @@
             margin-bottom: 5px;
             flex-wrap: wrap;
         }
-        .weather-temp {
-            font-size: clamp(1.8rem, 7vw, 2.2rem);
-            font-weight: 700;
-        }
-        .weather-desc {
-            text-transform: capitalize;
-        }
+        .weather-temp { font-size: clamp(1.8rem, 7vw, 2.2rem); font-weight: 700; }
+        .weather-desc { text-transform: capitalize; }
         .forecast-row {
             display: flex;
             justify-content: space-around;
@@ -304,59 +256,20 @@
             flex-wrap: wrap;
             gap: 5px;
         }
-        .forecast-item {
-            text-align: center;
-            min-width: 60px;
-        }
+        .forecast-item { text-align: center; min-width: 60px; }
 
-        /* Trend arrows */
         .trend-up { color: var(--danger); }
         .trend-down { color: var(--success); }
         .trend-neutral { color: var(--text-dim); }
-        .trend-icon {
-            font-size: 1.4rem;
-            margin-left: 5px;
-        }
+        .trend-icon { font-size: 1.4rem; margin-left: 5px; }
 
-        /* ----- Utility for small screens ----- */
+        hr { width: 100%; border: 0.5px solid var(--border-light); margin: 12px 0; }
+
         @media (max-width: 480px) {
-            .header-right {
-                width: 100%;
-                justify-content: center;
-            }
-            .header-left {
-                width: 100%;
-                justify-content: center;
-                text-align: center;
-            }
-            #status {
-                width: 100%;
-                text-align: center;
-            }
-            button, select {
-                padding: 6px 10px;
-                font-size: 0.8rem;
-            }
-            .alert-badge {
-                white-space: normal;
-                text-align: center;
-            }
-            .value {
-                font-size: 2rem;
-            }
-        }
-
-        /* Fix for long location text */
-        #gps-coords {
-            font-size: clamp(0.9rem, 4vw, 1.2rem) !important;
-            word-break: break-all;
-            text-align: center;
-        }
-
-        hr {
-            width: 100%;
-            border: 0.5px solid var(--border-light);
-            margin: 12px 0;
+            .header-right, .header-left { width: 100%; justify-content: center; text-align: center; }
+            #status { width: 100%; text-align: center; }
+            button, select { padding: 6px 10px; font-size: 0.8rem; }
+            .alert-badge { white-space: normal; }
         }
     </style>
 </head>
@@ -379,8 +292,8 @@
             <option value="sw">🇰🇪 Kiswahili</option>
             <option value="kis">🌍 Ekegusii</option>
         </select>
-        <button id="voiceToggle" title="Enable voice alerts"><i class="fas fa-volume-up"></i> <span data-i18n="voice">Voice</span></button>
-        <button id="notifyToggle" title="Enable push notifications"><i class="fas fa-bell"></i> <span data-i18n="notify">Notify</span></button>
+        <button id="voiceToggle"><i class="fas fa-volume-up"></i> <span data-i18n="voice">Voice</span></button>
+        <button id="notifyToggle"><i class="fas fa-bell"></i> <span data-i18n="notify">Notify</span></button>
         <button id="exportBtn"><i class="fas fa-download"></i> <span data-i18n="export">Export CSV</span></button>
         <button id="themeToggle" class="theme-toggle"><i class="fas fa-moon"></i> <span data-i18n="dark">Dark</span></button>
         <div id="status" style="color:var(--text-dim); font-size:0.8rem;"><span data-i18n="connecting">Connecting...</span></div>
@@ -388,36 +301,27 @@
 </header>
 
 <div class="container">
-    <!-- Temperature KPI (with trend arrow) -->
+    <!-- Temperature KPI -->
     <div class="card" id="temp-card">
         <i class="fas fa-thermometer-half fa-2x"></i>
         <div class="label" data-i18n="temperature">Temperature</div>
-        <div class="value">
-            <span id="temp-val">--</span>
-            <span id="temp-trend" class="trend-icon"></span>
-        </div>
+        <div class="value"><span id="temp-val">--</span><span id="temp-trend" class="trend-icon"></span></div>
         <div class="sub-text">&deg;C</div>
     </div>
 
-    <!-- Depth KPI (with trend arrow) -->
+    <!-- Depth KPI -->
     <div class="card" id="depth-card">
         <i class="fas fa-ruler-vertical fa-2x"></i>
         <div class="label" data-i18n="tankDepth">Tank Depth (Distance)</div>
-        <div class="value">
-            <span id="depth-val">--</span>
-            <span id="depth-trend" class="trend-icon"></span>
-        </div>
+        <div class="value"><span id="depth-val">--</span><span id="depth-trend" class="trend-icon"></span></div>
         <div class="sub-text" id="depth-status" data-i18n="syncing">Syncing...</div>
     </div>
 
-    <!-- Concentration KPI (with trend arrow) -->
+    <!-- Concentration KPI -->
     <div class="card">
         <i class="fas fa-vial fa-2x"></i>
         <div class="label" data-i18n="concentration">Acaricide Conc.</div>
-        <div class="value">
-            <span id="conc-val">--</span>
-            <span id="conc-trend" class="trend-icon"></span>
-        </div>
+        <div class="value"><span id="conc-val">--</span><span id="conc-trend" class="trend-icon"></span></div>
         <div class="sub-text" id="conc-status" data-i18n="checkingMix">Checking Mix...</div>
     </div>
 
@@ -462,18 +366,15 @@
         <div class="sub-text" id="refill-date" data-i18n="calculating">Calculating...</div>
     </div>
 
-    <!-- Main Trend Chart (wide) -->
+    <!-- Main Trend Chart -->
     <div class="card-wide chart-container">
         <canvas id="mainChart"></canvas>
     </div>
 
-    <!-- Cattle Count (with trend arrow) -->
+    <!-- Cattle Count -->
     <div class="card">
         <div class="label" data-i18n="cattleCount">Daily Cattle Count</div>
-        <div class="value">
-            <span id="count-val" style="color:var(--accent)">--</span>
-            <span id="count-trend" class="trend-icon"></span>
-        </div>
+        <div class="value"><span id="count-val" style="color:var(--accent)">--</span><span id="count-trend" class="trend-icon"></span></div>
         <i class="fas fa-cow" style="font-size: 3rem; margin-top: 10px;"></i>
         <div class="sub-text" id="last-dip-time" data-i18n="lastDip">Last dip: --</div>
     </div>
@@ -494,9 +395,7 @@
         <div class="value" id="weight-val" style="font-size: 1.8rem;">-- g</div>
         <hr>
         <div class="label" data-i18n="siteLocation">Site Location</div>
-        <div id="location-name-display" class="location-name">
-            <i class="fas fa-location-dot"></i> <span id="location-name-text">--</span>
-        </div>
+        <div class="location-name"><i class="fas fa-location-dot"></i> <span id="location-name-text">--</span></div>
         <div class="sub-text" id="location-coords-small" style="margin-top:4px;"></div>
     </div>
 </div>
@@ -509,24 +408,576 @@
 </div>
 
 <script>
-    // ---------- (Same JavaScript as previous version – unchanged) ----------
     (function(){
         "use strict";
+
+        // ==================== CONFIGURATION ====================
         const CONFIG = {
             channelId: "3314650",
             apiKey: "BTZILKVBZTVJJV2T",
             refreshInterval: 15000,
-            weatherApiKey: "YOUR_OPENWEATHERMAP_API_KEY",
+            weatherApiKey: "1517971b3ffd6ba360add1dbd3c31e13",  // Your OpenWeatherMap key
             weatherCity: "Kakamega",
             weatherCountry: "KE"
         };
+
+        // ==================== TRANSLATIONS ====================
         const i18n = {
-            en: { /* ... full translations as before ... */ },
-            sw: { /* ... */ },
-            kis: { /* ... */ }
+            en: {
+                title: "Acaricide Dip • Smart IoT", allNormal: "All systems normal", demoMode: "Demo Mode",
+                voice: "Voice", notify: "Notify", export: "Export CSV", dark: "Dark", light: "Light",
+                connecting: "Connecting...", temperature: "Temperature", tankDepth: "Tank Depth (Distance)",
+                syncing: "Syncing...", concentration: "Acaricide Conc.", checkingMix: "Checking Mix...",
+                daysToRefill: "Est. Days to Refill", calculating: "Calculating...", cattleCount: "Daily Cattle Count",
+                lastDip: "Last dip: --", sprayPump: "Spray Pump:", refillPump: "Refill Pump:", off: "OFF", active: "ACTIVE",
+                lastWeight: "Last Weight Recorded", installPrompt: "Install Cattle Dip as an app", install: "Install",
+                levelOK: "Level OK", mediumLevel: "Medium Level", criticalRefill: "Critical – Refill!",
+                optimalMix: "Optimal Mix", tooDilute: "Too Dilute", tooStrong: "Too Strong", live: "Live",
+                offline: "Offline / Sync error – retrying...", highTemp: "High temperature", lowTemp: "Low temperature",
+                tankCritical: "Tank critical – Refill!", tankOverfilled: "Tank overfilled",
+                concTooLow: "Acaricide concentration too low", concTooHigh: "Acaricide concentration too high",
+                voiceActivated: "Voice alerts activated.", notificationsEnabled: "Notifications Enabled",
+                alertTitle: "⚠️ Cattle Dip Alert", gpsLocation: "GPS Location", refreshLocation: "Refresh Location",
+                viewOnMap: "View on Map", gpsUnavailable: "Location unavailable", gpsDenied: "Location permission denied",
+                gpsError: "Error getting location", accuracy: "Accuracy", siteLocation: "Site Location",
+                fetchingLocation: "Fetching location name...", locationUnknown: "Unknown location",
+                weather: "Weather", refreshWeather: "Refresh Weather", humidity: "Humidity", forecast: "3-Day Forecast"
+            },
+            sw: {
+                title: "Dip ya Acaricide • IoT Smart", allNormal: "Mifumo yote ni sawa", demoMode: "Hali ya Onyesho",
+                voice: "Sauti", notify: "Arifa", export: "Pakua CSV", dark: "Giza", light: "Mwanga",
+                connecting: "Inaunganisha...", temperature: "Joto", tankDepth: "Kina cha Tangi (Umbali)",
+                syncing: "Inasawazisha...", concentration: "Kiwango cha Acaricide", checkingMix: "Inakagua Mchanganyiko...",
+                daysToRefill: "Siku Zilizobaki Kujaza", calculating: "Inahesabu...", cattleCount: "Idadi ya Ng'ombe Kwa Siku",
+                lastDip: "Dip ya mwisho: --", sprayPump: "Pampu ya Kunyunyizia:", refillPump: "Pampu ya Kujaza:",
+                off: "ZIMA", active: "WASHA", lastWeight: "Uzito wa Mwisho", installPrompt: "Sakinisha Cattle Dip kama programu",
+                install: "Sakinisha", levelOK: "Kiwango Sawa", mediumLevel: "Kiwango cha Kati", criticalRefill: "Hali Mbaya – Jaza!",
+                optimalMix: "Mchanganyiko Bora", tooDilute: "Imepungua Sana", tooStrong: "Imekolea Sana", live: "Moja kwa Moja",
+                offline: "Nje ya Mtandao – Inajaribu tena...", highTemp: "Joto la juu", lowTemp: "Joto la chini",
+                tankCritical: "Tangi iko hatarini – Jaza!", tankOverfilled: "Tangi imejaa kupita kiasi",
+                concTooLow: "Kiwango cha acaricide kiko chini sana", concTooHigh: "Kiwango cha acaricide kiko juu sana",
+                voiceActivated: "Arifa za sauti zimewashwa.", notificationsEnabled: "Arifa Zimewashwa",
+                alertTitle: "⚠️ Tahadhari ya Dip ya Ng'ombe", gpsLocation: "Mahali pa GPS", refreshLocation: "Sasisha Mahali",
+                viewOnMap: "Tazama kwenye Ramani", gpsUnavailable: "Mahali hapatikani", gpsDenied: "Ruhusa ya mahali imekataliwa",
+                gpsError: "Hitilafu kupata mahali", accuracy: "Usahihi", siteLocation: "Eneo la Tovuti",
+                fetchingLocation: "Inatafuta jina la eneo...", locationUnknown: "Eneo halijulikani",
+                weather: "Hali ya Hewa", refreshWeather: "Sasisha Hali ya Hewa", humidity: "Unyevu", forecast: "Utabiri wa Siku 3"
+            },
+            kis: {
+                title: "Rituko ria Acaricide • IoT Smart", allNormal: "Ebiee bionsi nigo buna", demoMode: "Enemo ria Okorokia",
+                voice: "Amang'ana", notify: "Amanyore", export: "Kurusia CSV", dark: "Giza", light: "Oborabu",
+                connecting: "Korangeria...", temperature: "Enyang'a", tankDepth: "Obworai bwe Etangi (Oborai)",
+                syncing: "Korwana...", concentration: "Ekiagio kia Acaricide", checkingMix: "Korigeria Ekianganyi...",
+                daysToRefill: "Amang'ana Konya Kogecha", calculating: "Kobara...", cattleCount: "Oborio bwe Ng'ombe Rituko",
+                lastDip: "Rituko ria mwiso: --", sprayPump: "Enchombe ya Konyunyusia:", refillPump: "Enchombe ya Kogecha:",
+                off: "TIMOROKI", active: "EGOKORA", lastWeight: "Oborito bwe Mwiso", installPrompt: "Enoka Cattle Dip buna porogaramu",
+                install: "Enoka", levelOK: "Ekero Nayio", mediumLevel: "Ekero Gati", criticalRefill: "Obotambe – Gecha!",
+                optimalMix: "Ekianganyi Ekenene", tooDilute: "Nekeene Mono", tooStrong: "Nekeene Mono", live: "Konya Konya",
+                offline: "Tori nde – Togetage...", highTemp: "Enyang'a enene", lowTemp: "Enyang'a enke",
+                tankCritical: "Etangi ere ase obotambe – Gecha!", tankOverfilled: "Etangi eiorerete mono",
+                concTooLow: "Ekiagio kia acaricide nakeene mono", concTooHigh: "Ekiagio kia acaricide nene mono",
+                voiceActivated: "Amang'ana amanyore nigo atureirwe.", notificationsEnabled: "Amanyore nigo atureirwe",
+                alertTitle: "⚠️ Amanyore a Rituko ria Ng'ombe", gpsLocation: "Ense ya GPS", refreshLocation: "Rusia Ense",
+                viewOnMap: "Rora ase Ramani", gpsUnavailable: "Ense tigorokwanekana", gpsDenied: "Obosio bwe ense bokatirwe",
+                gpsError: "Obotambe korwa ense", accuracy: "Obwenge", siteLocation: "Ense Y'omo",
+                fetchingLocation: "Korigeria erieta ria ense...", locationUnknown: "Ense tayamanyekanete",
+                weather: "Embera y'ense", refreshWeather: "Rusia Embera y'ense", humidity: "Amache", forecast: "Okobara amang'ana atato"
+            }
         };
-        // [Rest of the JavaScript code exactly as provided in previous response]
-        // (Includes all functions: translations, weather, trends, GPS, charts, sync, etc.)
+
+        let currentLang = localStorage.getItem('cattleDipLang') || 'en';
+        let currentPosition = null;
+        let weatherCity = CONFIG.weatherCity;
+
+        // ==================== APPLY TRANSLATIONS ====================
+        function applyTranslations(lang) {
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (i18n[lang] && i18n[lang][key]) {
+                    if (el.tagName === 'INPUT' && el.type === 'checkbox') return;
+                    el.textContent = i18n[lang][key];
+                }
+            });
+            const lastDipSpan = document.getElementById('last-dip-time');
+            if (lastDipSpan && lastDipSpan.getAttribute('data-last-time')) {
+                const time = lastDipSpan.getAttribute('data-last-time');
+                lastDipSpan.textContent = `${i18n[lang].lastDip.replace('--', time)}`;
+            }
+            const statusEl = document.getElementById('status');
+            if (statusEl && statusEl.getAttribute('data-status')) {
+                statusEl.innerHTML = statusEl.getAttribute('data-status');
+            }
+            if (mainChart) {
+                mainChart.data.datasets[0].label = i18n[lang].temperature + ' (°C)';
+                mainChart.data.datasets[1].label = i18n[lang].concentration + ' (%)';
+                mainChart.options.scales.y.title.text = i18n[lang].temperature + ' °C';
+                mainChart.options.scales.y1.title.text = i18n[lang].concentration + ' %';
+                mainChart.update();
+            }
+            if (weightChart) {
+                weightChart.data.datasets[0].label = i18n[lang].lastWeight + ' (g)';
+                weightChart.update();
+            }
+            const accEl = document.getElementById('gps-accuracy');
+            if (accEl && accEl.getAttribute('data-accuracy')) {
+                const acc = accEl.getAttribute('data-accuracy');
+                accEl.textContent = `${i18n[lang].accuracy}: ${acc} m`;
+            }
+        }
+
+        // ==================== WEATHER API ====================
+        async function fetchWeather(lat, lon) {
+            const tempSpan = document.getElementById('weather-temp');
+            const descSpan = document.getElementById('weather-desc');
+            const humiditySpan = document.getElementById('weather-humidity');
+            const iconSpan = document.getElementById('weather-icon');
+            const locationSpan = document.getElementById('weather-location');
+            const forecastContainer = document.getElementById('forecast-container');
+            
+            try {
+                let query = (lat && lon) ? `lat=${lat}&lon=${lon}` : `q=${weatherCity},${CONFIG.weatherCountry}`;
+                const currentUrl = `https://api.openweathermap.org/data/2.5/weather?${query}&units=metric&appid=${CONFIG.weatherApiKey}`;
+                const forecastUrl = `https://api.openweathermap.org/data/2.5/forecast?${query}&units=metric&appid=${CONFIG.weatherApiKey}&cnt=24`;
+                
+                const [currentRes, forecastRes] = await Promise.all([fetch(currentUrl), fetch(forecastUrl)]);
+                if (!currentRes.ok) throw new Error('Weather API error');
+                
+                const current = await currentRes.json();
+                const forecast = await forecastRes.json();
+                
+                locationSpan.textContent = current.name || weatherCity;
+                if (lat && lon) weatherCity = current.name;
+                
+                tempSpan.textContent = `${Math.round(current.main.temp)}°C`;
+                descSpan.textContent = current.weather[0].description;
+                humiditySpan.textContent = `${i18n[currentLang].humidity}: ${current.main.humidity}%`;
+                iconSpan.innerHTML = `<img src="https://openweathermap.org/img/wn/${current.weather[0].icon}@2x.png" alt="" style="width:50px;height:50px;">`;
+                
+                const forecastList = forecast.list.filter((_, i) => i % 8 === 0).slice(0, 3);
+                forecastContainer.innerHTML = forecastList.map(item => {
+                    const date = new Date(item.dt * 1000);
+                    const day = date.toLocaleDateString('en-US', { weekday: 'short' });
+                    return `<div class="forecast-item"><div>${day}</div><img src="https://openweathermap.org/img/wn/${item.weather[0].icon}.png" style="width:40px;"><div>${Math.round(item.main.temp)}°</div></div>`;
+                }).join('');
+            } catch (e) {
+                console.warn('Weather fetch error:', e);
+                tempSpan.textContent = '--';
+                descSpan.textContent = i18n[currentLang].gpsUnavailable;
+            }
+        }
+
+        // ==================== TREND CALCULATION ====================
+        function calculateTrend(currentValue, pastValues) {
+            if (!pastValues || pastValues.length < 2) return { direction: 'neutral', change: 0 };
+            const avgPast = pastValues.reduce((a,b) => a + b, 0) / pastValues.length;
+            const change = currentValue - avgPast;
+            return { direction: change > 0 ? 'up' : (change < 0 ? 'down' : 'neutral'), change: Math.abs(change).toFixed(1) };
+        }
+
+        function updateTrendIndicators(feeds) {
+            if (feeds.length < 3) return;
+            const current = feeds[feeds.length - 1];
+            const past = feeds.slice(-7, -1);
+            
+            const tempTrend = calculateTrend(parseFloat(current.field1), past.map(f => parseFloat(f.field1)));
+            document.getElementById('temp-trend').innerHTML = getTrendIcon(tempTrend.direction);
+            
+            const depthTrend = calculateTrend(parseFloat(current.field2), past.map(f => parseFloat(f.field2)));
+            document.getElementById('depth-trend').innerHTML = getTrendIcon(depthTrend.direction, true);
+            
+            const concTrend = calculateTrend(parseFloat(current.field7), past.map(f => parseFloat(f.field7)));
+            document.getElementById('conc-trend').innerHTML = getTrendIcon(concTrend.direction);
+            
+            const countTrend = calculateTrend(parseFloat(current.field3)||0, past.map(f => parseFloat(f.field3)||0));
+            document.getElementById('count-trend').innerHTML = getTrendIcon(countTrend.direction);
+        }
+
+        function getTrendIcon(direction, invert = false) {
+            let icon, cls;
+            if (direction === 'up') { icon = '↑'; cls = invert ? 'trend-down' : 'trend-up'; }
+            else if (direction === 'down') { icon = '↓'; cls = invert ? 'trend-up' : 'trend-down'; }
+            else { icon = '–'; cls = 'trend-neutral'; }
+            return `<span class="${cls}">${icon}</span>`;
+        }
+
+        // ==================== REVERSE GEOCODING ====================
+        async function fetchLocationName(lat, lon) {
+            const displayEl = document.getElementById('location-name-text');
+            const smallCoords = document.getElementById('location-coords-small');
+            displayEl.textContent = i18n[currentLang].fetchingLocation;
+            smallCoords.textContent = `${lat.toFixed(6)}, ${lon.toFixed(6)}`;
+            
+            try {
+                const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=14&addressdetails=1`;
+                const res = await fetch(url, { headers: { 'Accept-Language': currentLang === 'sw' ? 'sw' : (currentLang === 'kis' ? 'sw' : 'en') }});
+                const data = await res.json();
+                
+                let locationName = '';
+                if (data.address) {
+                    const parts = [];
+                    if (data.address.village || data.address.neighbourhood || data.address.suburb) 
+                        parts.push(data.address.village || data.address.neighbourhood || data.address.suburb);
+                    if (data.address.town || data.address.city) 
+                        parts.push(data.address.town || data.address.city);
+                    else if (data.address.county) 
+                        parts.push(data.address.county);
+                    if (data.address.state) parts.push(data.address.state);
+                    locationName = parts.join(', ');
+                }
+                displayEl.textContent = locationName || (data.display_name ? data.display_name.split(',')[0] : i18n[currentLang].locationUnknown);
+            } catch (e) {
+                displayEl.textContent = i18n[currentLang].locationUnknown;
+            }
+        }
+
+        // ==================== GPS LOCATION ====================
+        function updateGpsDisplay(position) {
+            currentPosition = position;
+            const lat = position.coords.latitude, lon = position.coords.longitude;
+            
+            document.getElementById('gps-coords').innerHTML = `${lat.toFixed(6)}, ${lon.toFixed(6)}`;
+            const accEl = document.getElementById('gps-accuracy');
+            accEl.textContent = `${i18n[currentLang].accuracy}: ${position.coords.accuracy.toFixed(1)} m`;
+            accEl.setAttribute('data-accuracy', position.coords.accuracy.toFixed(1));
+            
+            const mapLink = document.getElementById('gps-map-link');
+            mapLink.href = `https://maps.google.com/?q=${lat},${lon}`;
+            mapLink.style.display = 'inline-block';
+            
+            fetchLocationName(lat, lon);
+            fetchWeather(lat, lon);
+        }
+
+        function handleGpsError(error) {
+            document.getElementById('gps-coords').textContent = i18n[currentLang][error.code === 1 ? 'gpsDenied' : (error.code === 2 ? 'gpsUnavailable' : 'gpsError')];
+            fetchWeather();  // fallback to city
+        }
+
+        function getGpsLocation() {
+            if (!navigator.geolocation) return;
+            navigator.geolocation.getCurrentPosition(updateGpsDisplay, handleGpsError, {
+                enableHighAccuracy: true, timeout: 10000, maximumAge: 60000
+            });
+        }
+
+        // ==================== PWA SETUP ====================
+        const manifest = {
+            name: "Cattle Dip Acaricide Monitor",
+            short_name: "CattleDip",
+            start_url: ".",
+            display: "standalone",
+            background_color: "#0f172a",
+            theme_color: "#0f172a",
+            icons: [{ src: "https://cdn-icons-png.flaticon.com/512/1998/1998610.png", sizes: "512x512", type: "image/png" }]
+        };
+        const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
+        document.getElementById('manifest-link').href = URL.createObjectURL(manifestBlob);
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                const swCode = `const CACHE_NAME='cattle-dip-v1';self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE_NAME).then(c=>c.addAll(['.','https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css','https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js','https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.2.1/dist/chartjs-plugin-annotation.min.js']))));self.addEventListener('fetch',e=>e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request))));`;
+                navigator.serviceWorker.register(URL.createObjectURL(new Blob([swCode],{type:'application/javascript'})));
+            });
+        }
+
+        let deferredPrompt;
+        const installBanner = document.getElementById('installBanner');
+        document.getElementById('installBtn').addEventListener('click', () => {
+            if (deferredPrompt) { deferredPrompt.prompt(); deferredPrompt.userChoice.then(() => installBanner.style.display = 'none'); }
+        });
+        document.getElementById('dismissBtn').addEventListener('click', () => installBanner.style.display = 'none');
+        window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; installBanner.style.display = 'flex'; });
+
+        // ==================== DASHBOARD STATE ====================
+        let mainChart, weightChart;
+        let historicalFeeds = [];
+        const MAX_HISTORY = 20;
+        let notificationsEnabled = false, voiceEnabled = false, lastAlertHash = '';
+        let speechSynth = window.speechSynthesis;
+
+        function initCharts() {
+            const ctxMain = document.getElementById('mainChart').getContext('2d');
+            mainChart = new Chart(ctxMain, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        { label: i18n[currentLang].temperature + ' (°C)', borderColor: '#ef4444', data: [], tension: 0.3, yAxisID: 'y' },
+                        { label: i18n[currentLang].concentration + ' (%)', borderColor: '#8b5cf6', data: [], tension: 0.3, yAxisID: 'y1' }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: {
+                        y: { type: 'linear', position: 'left', grid: { color: '#334155' }, title: { display: true, text: i18n[currentLang].temperature + ' °C' } },
+                        y1: { type: 'linear', position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: i18n[currentLang].concentration + ' %' } }
+                    },
+                    plugins: {
+                        legend: { labels: { color: '#f8fafc' } },
+                        annotation: {
+                            annotations: {
+                                tempSafe: { type: 'box', yMin: 25, yMax: 32, backgroundColor: 'rgba(34,197,94,0.08)', borderColor: '#22c55e', label: { content: 'Safe Temp', enabled: true } },
+                                concSafe: { type: 'box', yMin: 30, yMax: 60, yScaleID: 'y1', backgroundColor: 'rgba(139,92,246,0.08)', borderColor: '#8b5cf6', label: { content: 'Optimal Conc', enabled: true } }
+                            }
+                        }
+                    }
+                }
+            });
+
+            const ctxWeight = document.getElementById('weightChart').getContext('2d');
+            weightChart = new Chart(ctxWeight, {
+                type: 'bar',
+                data: { labels: [], datasets: [{ label: i18n[currentLang].lastWeight + ' (g)', backgroundColor: '#3b82f6', data: [] }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#f8fafc' } } }, scales: { y: { grid: { color: '#334155' } } } }
+            });
+        }
+
+        function updatePrediction(feeds) {
+            if (!feeds.length) return;
+            const recent = feeds.slice(-7).filter(f => f.field3);
+            if (recent.length < 2) return;
+            const avgDaily = recent.map(f => parseFloat(f.field3)||0).reduce((a,b)=>a+b,0)/recent.length;
+            const dailyUsage = avgDaily * 0.25;
+            const currentDistance = parseFloat(feeds[feeds.length-1].field2);
+            const daysLeft = (8.0 - currentDistance) / dailyUsage;
+            document.getElementById('days-left').innerText = Math.max(0, daysLeft).toFixed(1);
+            document.getElementById('refill-date').innerText = daysLeft > 0 ? `Refill ~ ${new Date(Date.now() + daysLeft*86400000).toLocaleDateString()}` : i18n[currentLang].criticalRefill;
+        }
+
+        function speakAlert(message) {
+            if (!voiceEnabled || !speechSynth) return;
+            if (speechSynth.speaking) speechSynth.cancel();
+            const utterance = new SpeechSynthesisUtterance(message);
+            utterance.lang = currentLang === 'sw' ? 'sw-KE' : (currentLang === 'kis' ? 'sw-KE' : 'en-US');
+            speechSynth.speak(utterance);
+        }
+
+        function sendNotification(title, body) {
+            if (!("Notification" in window) || !notificationsEnabled) return;
+            if (Notification.permission === "granted") {
+                new Notification(title, { body, icon: 'https://cdn-icons-png.flaticon.com/512/1998/1998610.png', requireInteraction: true });
+            }
+        }
+
+        function updateAlerts(temp, distance, conc) {
+            const alerts = [];
+            if (temp > 32) alerts.push(i18n[currentLang].highTemp);
+            if (temp < 20) alerts.push(i18n[currentLang].lowTemp);
+            if (distance > 8) alerts.push(i18n[currentLang].tankCritical);
+            if (distance < 3) alerts.push(i18n[currentLang].tankOverfilled);
+            if (conc < 20) alerts.push(i18n[currentLang].concTooLow);
+            if (conc > 70) alerts.push(i18n[currentLang].concTooHigh);
+            
+            const alertSpan = document.getElementById('alert-text');
+            const alertMessage = alerts.length ? alerts.join(' • ') : i18n[currentLang].allNormal;
+            document.getElementById('alert-badge').style.background = alerts.length ? '#ef4444' : '#22c55e';
+            alertSpan.textContent = alertMessage;
+            
+            if (alerts.length) {
+                const currentHash = alerts.sort().join('|');
+                if (currentHash !== lastAlertHash) {
+                    lastAlertHash = currentHash;
+                    if (notificationsEnabled) sendNotification(i18n[currentLang].alertTitle, alertMessage);
+                    if (voiceEnabled) speakAlert(i18n[currentLang].alertTitle + '. ' + alerts.join('. '));
+                }
+            } else {
+                lastAlertHash = '';
+            }
+        }
+
+        function updateCards(feed) {
+            const t = parseFloat(feed.field1)||0, d = parseFloat(feed.field2)||0, conc = parseFloat(feed.field7)||0;
+            document.getElementById('temp-val').innerText = t.toFixed(1);
+            document.getElementById('temp-card').className = (t>=20 && t<=32) ? 'card bg-green' : 'card bg-red';
+            
+            document.getElementById('depth-val').innerText = d.toFixed(1) + " cm";
+            const dCard = document.getElementById('depth-card'), dStat = document.getElementById('depth-status');
+            if (d < 5) { dCard.className='card bg-green'; dStat.textContent = i18n[currentLang].levelOK; }
+            else if (d <= 8) { dCard.className='card bg-blue'; dStat.textContent = i18n[currentLang].mediumLevel; }
+            else { dCard.className='card bg-red'; dStat.textContent = i18n[currentLang].criticalRefill; }
+            
+            document.getElementById('conc-val').innerText = conc.toFixed(1);
+            const concStat = document.getElementById('conc-status');
+            if (conc>=30 && conc<=60) concStat.textContent = i18n[currentLang].optimalMix;
+            else if (conc<30) concStat.textContent = i18n[currentLang].tooDilute;
+            else concStat.textContent = i18n[currentLang].tooStrong;
+            
+            document.getElementById('count-val').innerText = feed.field3 || "0";
+            document.getElementById('weight-val').innerText = (parseInt(feed.field6)||0) + ' g';
+            
+            const lastDipSpan = document.getElementById('last-dip-time');
+            const time = feed.created_at ? new Date(feed.created_at).toLocaleTimeString() : '--';
+            lastDipSpan.textContent = i18n[currentLang].lastDip.replace('--', time);
+            lastDipSpan.setAttribute('data-last-time', time);
+            
+            togglePump('spray', feed.field4); togglePump('refill', feed.field5);
+            updateAlerts(t, d, conc);
+        }
+
+        function togglePump(id, val) {
+            const led = document.getElementById(id+'-led'), txt = document.getElementById(id+'-txt');
+            if (parseInt(val)===1) { led.classList.add('active'); txt.textContent = i18n[currentLang].active; txt.style.color="#4ade80"; }
+            else { led.classList.remove('active'); txt.textContent = i18n[currentLang].off; txt.style.color="#94a3b8"; }
+        }
+
+        function updateGraphs(feeds) {
+            if (!feeds.length) return;
+            const labels = feeds.map(f => new Date(f.created_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}));
+            mainChart.data.labels = labels;
+            mainChart.data.datasets[0].data = feeds.map(f => parseFloat(f.field1)||null);
+            mainChart.data.datasets[1].data = feeds.map(f => parseFloat(f.field7)||null);
+            mainChart.update('none');
+            weightChart.data.labels = labels;
+            weightChart.data.datasets[0].data = feeds.map(f => parseFloat(f.field6)||null);
+            weightChart.update('none');
+        }
+
+        function generateSimulatedFeed() {
+            const last = historicalFeeds.length ? historicalFeeds[historicalFeeds.length-1] : null;
+            const baseTemp = last ? parseFloat(last.field1) : 28, baseDistance = last ? parseFloat(last.field2) : 6, baseConc = last ? parseFloat(last.field7) : 45;
+            return {
+                created_at: new Date().toISOString(),
+                field1: Math.max(18, Math.min(38, baseTemp + (Math.random()-0.5)*2)).toFixed(1),
+                field2: Math.max(3, Math.min(12, baseDistance + 0.05 + (Math.random()-0.3)*0.6)).toFixed(1),
+                field3: Math.floor(20 + Math.random()*40),
+                field4: Math.random() > 0.7 ? 1 : 0,
+                field5: (baseDistance > 8) ? 1 : 0,
+                field6: Math.floor(350 + Math.random()*250),
+                field7: Math.max(10, Math.min(80, baseConc + (Math.random()-0.5)*5)).toFixed(1)
+            };
+        }
+
+        async function fetchRealData() {
+            const url = `https://api.thingspeak.com/channels/${CONFIG.channelId}/feeds.json?api_key=${CONFIG.apiKey}&results=20`;
+            const res = await fetch(url);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            return (await res.json()).feeds || [];
+        }
+
+        async function sync() {
+            const statusEl = document.getElementById('status');
+            try {
+                let feeds;
+                if (document.getElementById('simulateMode').checked) {
+                    const newPoint = generateSimulatedFeed();
+                    historicalFeeds.push(newPoint);
+                    if (historicalFeeds.length > MAX_HISTORY) historicalFeeds.shift();
+                    feeds = [...historicalFeeds];
+                } else {
+                    feeds = await fetchRealData();
+                    historicalFeeds = feeds;
+                }
+                if (!feeds.length) throw new Error('No data');
+                
+                updateCards(feeds[feeds.length-1]);
+                updateGraphs(feeds);
+                updatePrediction(feeds);
+                updateTrendIndicators(feeds);
+                
+                statusEl.innerHTML = `✅ ${i18n[currentLang].live} • ${new Date().toLocaleTimeString()}`;
+                if (document.getElementById('simulateMode').checked) statusEl.innerHTML += ' <span style="color:var(--warning)">(Demo)</span>';
+                statusEl.setAttribute('data-status', statusEl.innerHTML);
+            } catch (e) {
+                statusEl.innerHTML = `⚠️ ${i18n[currentLang].offline}`;
+                statusEl.setAttribute('data-status', statusEl.innerHTML);
+            }
+        }
+
+        function setupLanguage() {
+            const select = document.getElementById('langSelect');
+            select.value = currentLang;
+            select.addEventListener('change', (e) => {
+                currentLang = e.target.value;
+                localStorage.setItem('cattleDipLang', currentLang);
+                applyTranslations(currentLang);
+                if (historicalFeeds.length) {
+                    updateCards(historicalFeeds[historicalFeeds.length-1]);
+                    updatePrediction(historicalFeeds);
+                    updateTrendIndicators(historicalFeeds);
+                }
+                if (mainChart) {
+                    mainChart.options.scales.y.title.text = i18n[currentLang].temperature + ' °C';
+                    mainChart.options.scales.y1.title.text = i18n[currentLang].concentration + ' %';
+                    mainChart.data.datasets[0].label = i18n[currentLang].temperature + ' (°C)';
+                    mainChart.data.datasets[1].label = i18n[currentLang].concentration + ' (%)';
+                    mainChart.update();
+                }
+                if (weightChart) {
+                    weightChart.data.datasets[0].label = i18n[currentLang].lastWeight + ' (g)';
+                    weightChart.update();
+                }
+                const themeBtn = document.getElementById('themeToggle');
+                const isLight = document.body.classList.contains('light');
+                themeBtn.innerHTML = `<i class="fas ${isLight ? 'fa-sun' : 'fa-moon'}"></i> ${isLight ? i18n[currentLang].light : i18n[currentLang].dark}`;
+                if (currentPosition) fetchLocationName(currentPosition.coords.latitude, currentPosition.coords.longitude);
+            });
+            applyTranslations(currentLang);
+        }
+
+        function init() {
+            initCharts();
+            setupLanguage();
+            
+            getGpsLocation();
+            document.getElementById('refreshGpsBtn').addEventListener('click', getGpsLocation);
+            document.getElementById('refreshWeatherBtn').addEventListener('click', () => {
+                if (currentPosition) fetchWeather(currentPosition.coords.latitude, currentPosition.coords.longitude);
+                else fetchWeather();
+            });
+            
+            document.getElementById('exportBtn').addEventListener('click', () => 
+                window.open(`https://api.thingspeak.com/channels/${CONFIG.channelId}/feeds.csv?api_key=${CONFIG.apiKey}&results=8000`, '_blank')
+            );
+            
+            const themeBtn = document.getElementById('themeToggle');
+            themeBtn.addEventListener('click', () => {
+                document.body.classList.toggle('light');
+                const isLight = document.body.classList.contains('light');
+                themeBtn.innerHTML = `<i class="fas ${isLight ? 'fa-sun' : 'fa-moon'}"></i> ${isLight ? i18n[currentLang].light : i18n[currentLang].dark}`;
+                if (mainChart) { mainChart.options.scales.y.grid.color = isLight ? '#cbd5e1' : '#334155'; mainChart.update(); }
+            });
+            
+            const notifyBtn = document.getElementById('notifyToggle');
+            if ("Notification" in window && Notification.permission === "granted") {
+                notificationsEnabled = true; notifyBtn.classList.add('active'); notifyBtn.innerHTML = '<i class="fas fa-bell"></i> Notify On';
+            }
+            notifyBtn.addEventListener('click', () => {
+                if (!("Notification" in window)) return alert("Notifications not supported");
+                if (Notification.permission === "granted") {
+                    notificationsEnabled = !notificationsEnabled;
+                    notifyBtn.classList.toggle('active', notificationsEnabled);
+                    notifyBtn.innerHTML = notificationsEnabled ? '<i class="fas fa-bell"></i> Notify On' : '<i class="fas fa-bell-slash"></i> Notify Off';
+                } else if (Notification.permission !== "denied") {
+                    Notification.requestPermission().then(perm => { 
+                        if (perm === "granted") { notificationsEnabled = true; notifyBtn.classList.add('active'); notifyBtn.innerHTML = '<i class="fas fa-bell"></i> Notify On'; }
+                    });
+                }
+            });
+            
+            const voiceBtn = document.getElementById('voiceToggle');
+            if ('speechSynthesis' in window) {
+                voiceBtn.addEventListener('click', () => {
+                    voiceEnabled = !voiceEnabled;
+                    voiceBtn.classList.toggle('active', voiceEnabled);
+                    voiceBtn.innerHTML = voiceEnabled ? '<i class="fas fa-volume-up"></i> Voice On' : '<i class="fas fa-volume-off"></i> Voice Off';
+                    if (voiceEnabled) {
+                        const u = new SpeechSynthesisUtterance('');
+                        u.volume = 0;
+                        speechSynth.speak(u);
+                        setTimeout(() => speakAlert(i18n[currentLang].voiceActivated), 100);
+                    } else {
+                        if (speechSynth.speaking) speechSynth.cancel();
+                    }
+                });
+            } else {
+                voiceBtn.disabled = true;
+            }
+            
+            sync();
+            setInterval(sync, CONFIG.refreshInterval);
+        }
+
+        init();
     })();
 </script>
 </body>
