@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Cattle Dip • Acaricide IoT PWA</title>
     
-    <!-- PWA Manifest (embedded via JS) -->
+    <!-- PWA Manifest -->
     <link rel="manifest" id="manifest-link" />
     <meta name="theme-color" content="#0f172a" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -19,7 +19,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.2.1/dist/chartjs-plugin-annotation.min.js"></script>
     
     <style>
-        /* ----- Responsive & Theme Variables ----- */
+        /* ----- THEME VARIABLES (Fully defined for both modes) ----- */
         :root {
             --bg: #0f172a;
             --card-bg: #1e293b;
@@ -31,18 +31,22 @@
             --warning: #f59e0b;
             --accent: #8b5cf6;
             --border-light: #334155;
+            --chart-grid: #334155;
+            --card-shadow: rgba(0,0,0,0.3);
         }
 
         body.light {
-            --bg: #f1f5f9;
+            --bg: #f8fafc;
             --card-bg: #ffffff;
             --text-main: #0f172a;
             --text-dim: #475569;
-            --border-light: #cbd5e1;
+            --border-light: #e2e8f0;
+            --chart-grid: #cbd5e1;
+            --card-shadow: rgba(0,0,0,0.05);
         }
 
         * { 
-            transition: background-color 0.2s ease, color 0.1s;
+            transition: background-color 0.2s ease, color 0.1s, border-color 0.2s;
             box-sizing: border-box;
         }
 
@@ -55,12 +59,12 @@
             min-height: 100vh;
         }
 
-        /* ----- HEADER (Responsive) ----- */
+        /* ----- HEADER ----- */
         header {
             background: var(--card-bg);
             padding: 15px 20px;
             border-bottom: 1px solid var(--border-light);
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 20px var(--card-shadow);
             display: flex;
             flex-wrap: wrap;
             align-items: center;
@@ -78,6 +82,7 @@
         .header-left h1 {
             margin: 0;
             font-size: clamp(1.2rem, 5vw, 1.8rem);
+            color: var(--text-main);
         }
 
         .header-right {
@@ -87,7 +92,7 @@
             flex-wrap: wrap;
         }
 
-        /* ----- CONTAINER & GRID (Mobile-First) ----- */
+        /* ----- GRID ----- */
         .container {
             max-width: 1600px;
             margin: 0 auto;
@@ -108,19 +113,31 @@
 
         .card-wide { grid-column: 1 / -1; }
 
-        /* ----- CARDS (Touch-friendly) ----- */
+        /* ----- CARDS (Conditional backgrounds handled by JS) ----- */
         .card {
             background: var(--card-bg);
             padding: clamp(12px, 4vw, 20px);
             border-radius: 16px;
             border: 1px solid var(--border-light);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            box-shadow: 0 8px 20px var(--card-shadow);
             display: flex;
             flex-direction: column;
             align-items: center;
             width: 100%;
             min-width: 0;
+            color: var(--text-main);
         }
+
+        /* Status classes - applied via JS, ensure text remains readable */
+        .card.bg-green { background: var(--success) !important; color: white; }
+        .card.bg-red { background: var(--danger) !important; color: white; }
+        .card.bg-blue { background: var(--info) !important; color: white; }
+        .card.bg-warning { background: var(--warning) !important; color: white; }
+
+        .card.bg-green .sub-text,
+        .card.bg-red .sub-text,
+        .card.bg-blue .sub-text,
+        .card.bg-warning .sub-text { color: rgba(255,255,255,0.85); }
 
         .value {
             font-size: clamp(2rem, 8vw, 2.8rem);
@@ -139,16 +156,14 @@
             font-size: 0.7rem;
             text-transform: uppercase;
             letter-spacing: 1.5px;
-            color: var(--text-dim);
+            color: inherit;
+            opacity: 0.9;
             text-align: center;
         }
 
         .sub-text { font-size: 0.85rem; color: var(--text-dim); text-align: center; }
 
-        .bg-red, .bg-green, .bg-blue { color: white; }
-        .bg-red .sub-text, .bg-green .sub-text, .bg-blue .sub-text { color: rgba(255,255,255,0.8); }
-
-        /* ----- CHART CONTAINERS ----- */
+        /* ----- CHARTS ----- */
         .chart-container {
             background: var(--card-bg);
             padding: 10px;
@@ -161,8 +176,8 @@
 
         canvas { width: 100% !important; height: 100% !important; }
 
-        /* ----- UI CONTROLS ----- */
-        .led { width: 12px; height: 12px; border-radius: 50%; display: inline-block; margin-right: 8px; background: #475569; }
+        /* ----- UI ELEMENTS ----- */
+        .led { width: 12px; height: 12px; border-radius: 50%; display: inline-block; margin-right: 8px; background: #64748b; }
         .led.active { background: #4ade80; box-shadow: 0 0 12px #4ade80; }
 
         .alert-badge {
@@ -202,7 +217,11 @@
         button:hover { opacity: 0.9; transform: scale(1.02); }
         button.active { background: var(--success); }
 
-        .theme-toggle { background: transparent; border: 1px solid var(--border-light); color: var(--text-main); }
+        .theme-toggle { 
+            background: transparent; 
+            border: 1px solid var(--border-light); 
+            color: var(--text-main); 
+        }
 
         #installBanner {
             position: fixed;
@@ -216,7 +235,7 @@
             color: var(--text-main);
             padding: 12px 20px;
             border-radius: 40px;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.2);
             border: 1px solid var(--accent);
             display: none;
             align-items: center;
@@ -226,7 +245,7 @@
             flex-wrap: wrap;
         }
 
-        /* ----- GPS & WEATHER SPECIFIC ----- */
+        /* ----- GPS & WEATHER ----- */
         .gps-link { color: var(--accent); text-decoration: none; margin-top: 8px; font-size: 0.9rem; }
         .gps-link:hover { text-decoration: underline; }
 
@@ -258,12 +277,24 @@
         }
         .forecast-item { text-align: center; min-width: 60px; }
 
+        /* Trend arrows */
         .trend-up { color: var(--danger); }
         .trend-down { color: var(--success); }
         .trend-neutral { color: var(--text-dim); }
         .trend-icon { font-size: 1.4rem; margin-left: 5px; }
 
         hr { width: 100%; border: 0.5px solid var(--border-light); margin: 12px 0; }
+
+        /* Light theme specific overrides for readability */
+        body.light .card.bg-green,
+        body.light .card.bg-red,
+        body.light .card.bg-blue,
+        body.light .card.bg-warning { color: white; }
+        
+        body.light .card.bg-green .sub-text,
+        body.light .card.bg-red .sub-text,
+        body.light .card.bg-blue .sub-text,
+        body.light .card.bg-warning .sub-text { color: rgba(255,255,255,0.9); }
 
         @media (max-width: 480px) {
             .header-right, .header-left { width: 100%; justify-content: center; text-align: center; }
@@ -283,7 +314,7 @@
         </div>
     </div>
     <div class="header-right">
-        <label style="display:flex;align-items:center;gap:6px;">
+        <label style="display:flex;align-items:center;gap:6px; color:var(--text-main);">
             <i class="fas fa-flask"></i>
             <input type="checkbox" id="simulateMode"> <span data-i18n="demoMode">Demo Mode</span>
         </label>
@@ -318,7 +349,7 @@
     </div>
 
     <!-- Concentration KPI -->
-    <div class="card">
+    <div class="card" id="conc-card">
         <i class="fas fa-vial fa-2x"></i>
         <div class="label" data-i18n="concentration">Acaricide Conc.</div>
         <div class="value"><span id="conc-val">--</span><span id="conc-trend" class="trend-icon"></span></div>
@@ -359,7 +390,7 @@
     </div>
 
     <!-- Predictive Days Card -->
-    <div class="card">
+    <div class="card" id="prediction-card">
         <i class="fas fa-hourglass-half fa-2x"></i>
         <div class="label" data-i18n="daysToRefill">Est. Days to Refill</div>
         <div class="value" id="days-left" style="color:var(--accent)">--</div>
@@ -372,7 +403,7 @@
     </div>
 
     <!-- Cattle Count -->
-    <div class="card">
+    <div class="card" id="count-card">
         <div class="label" data-i18n="cattleCount">Daily Cattle Count</div>
         <div class="value"><span id="count-val" style="color:var(--accent)">--</span><span id="count-trend" class="trend-icon"></span></div>
         <i class="fas fa-cow" style="font-size: 3rem; margin-top: 10px;"></i>
@@ -416,7 +447,7 @@
             channelId: "3314650",
             apiKey: "BTZILKVBZTVJJV2T",
             refreshInterval: 15000,
-            weatherApiKey: "1517971b3ffd6ba360add1dbd3c31e13",  // Your OpenWeatherMap key
+            weatherApiKey: "1517971b3ffd6ba360add1dbd3c31e13",
             weatherCity: "Kakamega",
             weatherCountry: "KE"
         };
@@ -650,7 +681,7 @@
 
         function handleGpsError(error) {
             document.getElementById('gps-coords').textContent = i18n[currentLang][error.code === 1 ? 'gpsDenied' : (error.code === 2 ? 'gpsUnavailable' : 'gpsError')];
-            fetchWeather();  // fallback to city
+            fetchWeather();
         }
 
         function getGpsLocation() {
@@ -697,6 +728,7 @@
 
         function initCharts() {
             const ctxMain = document.getElementById('mainChart').getContext('2d');
+            const gridColor = getComputedStyle(document.body).getPropertyValue('--chart-grid').trim() || '#334155';
             mainChart = new Chart(ctxMain, {
                 type: 'line',
                 data: {
@@ -709,11 +741,11 @@
                 options: {
                     responsive: true, maintainAspectRatio: false,
                     scales: {
-                        y: { type: 'linear', position: 'left', grid: { color: '#334155' }, title: { display: true, text: i18n[currentLang].temperature + ' °C' } },
+                        y: { type: 'linear', position: 'left', grid: { color: gridColor }, title: { display: true, text: i18n[currentLang].temperature + ' °C' } },
                         y1: { type: 'linear', position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: i18n[currentLang].concentration + ' %' } }
                     },
                     plugins: {
-                        legend: { labels: { color: '#f8fafc' } },
+                        legend: { labels: { color: getComputedStyle(document.body).getPropertyValue('--text-main').trim() } },
                         annotation: {
                             annotations: {
                                 tempSafe: { type: 'box', yMin: 25, yMax: 32, backgroundColor: 'rgba(34,197,94,0.08)', borderColor: '#22c55e', label: { content: 'Safe Temp', enabled: true } },
@@ -728,7 +760,11 @@
             weightChart = new Chart(ctxWeight, {
                 type: 'bar',
                 data: { labels: [], datasets: [{ label: i18n[currentLang].lastWeight + ' (g)', backgroundColor: '#3b82f6', data: [] }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#f8fafc' } } }, scales: { y: { grid: { color: '#334155' } } } }
+                options: { 
+                    responsive: true, maintainAspectRatio: false, 
+                    plugins: { legend: { labels: { color: getComputedStyle(document.body).getPropertyValue('--text-main').trim() } } }, 
+                    scales: { y: { grid: { color: gridColor } } } 
+                }
             });
         }
 
@@ -740,8 +776,16 @@
             const dailyUsage = avgDaily * 0.25;
             const currentDistance = parseFloat(feeds[feeds.length-1].field2);
             const daysLeft = (8.0 - currentDistance) / dailyUsage;
-            document.getElementById('days-left').innerText = Math.max(0, daysLeft).toFixed(1);
+            const daysSpan = document.getElementById('days-left');
+            daysSpan.innerText = Math.max(0, daysLeft).toFixed(1);
             document.getElementById('refill-date').innerText = daysLeft > 0 ? `Refill ~ ${new Date(Date.now() + daysLeft*86400000).toLocaleDateString()}` : i18n[currentLang].criticalRefill;
+            
+            // Update prediction card color
+            const predCard = document.getElementById('prediction-card');
+            predCard.classList.remove('bg-green', 'bg-red', 'bg-warning');
+            if (daysLeft <= 1) predCard.classList.add('bg-red');
+            else if (daysLeft <= 3) predCard.classList.add('bg-warning');
+            else predCard.classList.add('bg-green');
         }
 
         function speakAlert(message) {
@@ -770,7 +814,8 @@
             
             const alertSpan = document.getElementById('alert-text');
             const alertMessage = alerts.length ? alerts.join(' • ') : i18n[currentLang].allNormal;
-            document.getElementById('alert-badge').style.background = alerts.length ? '#ef4444' : '#22c55e';
+            const badge = document.getElementById('alert-badge');
+            badge.style.background = alerts.length ? '#ef4444' : '#22c55e';
             alertSpan.textContent = alertMessage;
             
             if (alerts.length) {
@@ -787,22 +832,36 @@
 
         function updateCards(feed) {
             const t = parseFloat(feed.field1)||0, d = parseFloat(feed.field2)||0, conc = parseFloat(feed.field7)||0;
-            document.getElementById('temp-val').innerText = t.toFixed(1);
-            document.getElementById('temp-card').className = (t>=20 && t<=32) ? 'card bg-green' : 'card bg-red';
+            const count = parseFloat(feed.field3)||0;
             
+            // Temperature card
+            document.getElementById('temp-val').innerText = t.toFixed(1);
+            const tempCard = document.getElementById('temp-card');
+            tempCard.classList.remove('bg-green', 'bg-red');
+            tempCard.classList.add((t >= 20 && t <= 32) ? 'bg-green' : 'bg-red');
+            
+            // Depth card
             document.getElementById('depth-val').innerText = d.toFixed(1) + " cm";
             const dCard = document.getElementById('depth-card'), dStat = document.getElementById('depth-status');
-            if (d < 5) { dCard.className='card bg-green'; dStat.textContent = i18n[currentLang].levelOK; }
-            else if (d <= 8) { dCard.className='card bg-blue'; dStat.textContent = i18n[currentLang].mediumLevel; }
-            else { dCard.className='card bg-red'; dStat.textContent = i18n[currentLang].criticalRefill; }
+            dCard.classList.remove('bg-green', 'bg-blue', 'bg-red');
+            if (d < 5) { dCard.classList.add('bg-green'); dStat.textContent = i18n[currentLang].levelOK; }
+            else if (d <= 8) { dCard.classList.add('bg-blue'); dStat.textContent = i18n[currentLang].mediumLevel; }
+            else { dCard.classList.add('bg-red'); dStat.textContent = i18n[currentLang].criticalRefill; }
             
+            // Concentration card
             document.getElementById('conc-val').innerText = conc.toFixed(1);
-            const concStat = document.getElementById('conc-status');
-            if (conc>=30 && conc<=60) concStat.textContent = i18n[currentLang].optimalMix;
-            else if (conc<30) concStat.textContent = i18n[currentLang].tooDilute;
-            else concStat.textContent = i18n[currentLang].tooStrong;
+            const concCard = document.getElementById('conc-card'), concStat = document.getElementById('conc-status');
+            concCard.classList.remove('bg-green', 'bg-red', 'bg-warning');
+            if (conc >= 30 && conc <= 60) { concCard.classList.add('bg-green'); concStat.textContent = i18n[currentLang].optimalMix; }
+            else if (conc < 30) { concCard.classList.add('bg-red'); concStat.textContent = i18n[currentLang].tooDilute; }
+            else { concCard.classList.add('bg-warning'); concStat.textContent = i18n[currentLang].tooStrong; }
             
-            document.getElementById('count-val').innerText = feed.field3 || "0";
+            // Cattle count card
+            document.getElementById('count-val').innerText = count;
+            const countCard = document.getElementById('count-card');
+            countCard.classList.remove('bg-green', 'bg-blue');
+            countCard.classList.add(count > 0 ? 'bg-blue' : 'bg-green'); // subtle indicator
+            
             document.getElementById('weight-val').innerText = (parseInt(feed.field6)||0) + ' g';
             
             const lastDipSpan = document.getElementById('last-dip-time');
@@ -817,7 +876,7 @@
         function togglePump(id, val) {
             const led = document.getElementById(id+'-led'), txt = document.getElementById(id+'-txt');
             if (parseInt(val)===1) { led.classList.add('active'); txt.textContent = i18n[currentLang].active; txt.style.color="#4ade80"; }
-            else { led.classList.remove('active'); txt.textContent = i18n[currentLang].off; txt.style.color="#94a3b8"; }
+            else { led.classList.remove('active'); txt.textContent = i18n[currentLang].off; txt.style.color="inherit"; }
         }
 
         function updateGraphs(feeds) {
@@ -896,6 +955,9 @@
                     updateTrendIndicators(historicalFeeds);
                 }
                 if (mainChart) {
+                    const gridColor = getComputedStyle(document.body).getPropertyValue('--chart-grid').trim();
+                    mainChart.options.scales.y.grid.color = gridColor;
+                    mainChart.options.scales.y1.grid.color = gridColor;
                     mainChart.options.scales.y.title.text = i18n[currentLang].temperature + ' °C';
                     mainChart.options.scales.y1.title.text = i18n[currentLang].concentration + ' %';
                     mainChart.data.datasets[0].label = i18n[currentLang].temperature + ' (°C)';
@@ -904,6 +966,7 @@
                 }
                 if (weightChart) {
                     weightChart.data.datasets[0].label = i18n[currentLang].lastWeight + ' (g)';
+                    weightChart.options.scales.y.grid.color = getComputedStyle(document.body).getPropertyValue('--chart-grid').trim();
                     weightChart.update();
                 }
                 const themeBtn = document.getElementById('themeToggle');
@@ -912,6 +975,21 @@
                 if (currentPosition) fetchLocationName(currentPosition.coords.latitude, currentPosition.coords.longitude);
             });
             applyTranslations(currentLang);
+        }
+
+        function refreshChartColors() {
+            if (!mainChart) return;
+            const gridColor = getComputedStyle(document.body).getPropertyValue('--chart-grid').trim() || '#334155';
+            const textColor = getComputedStyle(document.body).getPropertyValue('--text-main').trim() || '#f8fafc';
+            mainChart.options.scales.y.grid.color = gridColor;
+            mainChart.options.scales.y1.grid.color = gridColor;
+            mainChart.options.plugins.legend.labels.color = textColor;
+            mainChart.update();
+            if (weightChart) {
+                weightChart.options.scales.y.grid.color = gridColor;
+                weightChart.options.plugins.legend.labels.color = textColor;
+                weightChart.update();
+            }
         }
 
         function init() {
@@ -934,7 +1012,7 @@
                 document.body.classList.toggle('light');
                 const isLight = document.body.classList.contains('light');
                 themeBtn.innerHTML = `<i class="fas ${isLight ? 'fa-sun' : 'fa-moon'}"></i> ${isLight ? i18n[currentLang].light : i18n[currentLang].dark}`;
-                if (mainChart) { mainChart.options.scales.y.grid.color = isLight ? '#cbd5e1' : '#334155'; mainChart.update(); }
+                refreshChartColors();
             });
             
             const notifyBtn = document.getElementById('notifyToggle');
